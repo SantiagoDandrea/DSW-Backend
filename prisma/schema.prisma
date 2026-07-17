@@ -4,10 +4,222 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMIN
+  CLIENTE
+}
+
+enum EstadoPedido {
+  PENDIENTE
+  CONFIRMADO
+  EN_PREPARACION
+  ENVIADO
+  ENTREGADO
+  CANCELADO
+}
+
+enum EstadoEnvio {
+  PENDIENTE
+  EN_PREPARACION
+  EN_TRANSITO
+  ENTREGADO
+  CANCELADO
+}
+
+model Localidad {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  codigoPostal  String
+  provincia     String
+
+  usuarios      Usuario[]
+}
+
+model Usuario {
+  dni           String    @id
+
+  nombre        String
+  apellido      String
+  email         String    @unique
+  password      String
+  telefono      String
+
+  rol           Rol
+
+  localidadId   Int?
+  localidad     Localidad? @relation(fields: [localidadId], references: [id], onDelete: SetNull)
+
+  pedidos       Pedido[]
+
+  @@index([localidadId])
+}
+
+model Categoria {
+  id            Int        @id @default(autoincrement())
+  nombre        String     @unique
+
+  productos     Producto[]
+}
+
+model Marca {
+  id            Int        @id @default(autoincrement())
+  nombre        String     @unique
+
+  productos     Producto[]
+}
+
+model Proveedor {
+  id            Int        @id @default(autoincrement())
+
+  nombre        String
+  cuit          String     @unique
+  telefono      String
+
+  productos     Producto[]
+}
+
+model Producto {
+  id            Int        @id @default(autoincrement())
+
+  nombre        String
+  descripcion   String
+
+  categoriaId   Int
+  marcaId       Int
+  proveedorId   Int
+
+  categoria     Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  marca         Marca     @relation(fields: [marcaId], references: [id], onDelete: Restrict)
+  proveedor     Proveedor @relation(fields: [proveedorId], references: [id], onDelete: Restrict)
+
+  imagenes      ImagenProducto[]
+  precios       Precio[]
+  stock         Stock[]
+  detalles      DetallePedido[]
+
+  @@index([categoriaId])
+  @@index([marcaId])
+  @@index([proveedorId])
+}
+
+model ImagenProducto {
+  id            Int        @id @default(autoincrement())
+
+  productoId    Int
+  url           String
+  orden         Int?
+
+  producto      Producto   @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@index([productoId])
+}
+
+model Precio {
+  id            Int        @id @default(autoincrement())
+
+  productoId    Int
+  valor         Decimal    @db.Decimal(10,2)
+  fechaDesde    DateTime
+
+  producto      Producto   @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@index([productoId])
+  @@index([fechaDesde])
+}
+
+model Almacen {
+  id            Int        @id @default(autoincrement())
+
+  descripcion   String
+  direccion     String
+
+  stock         Stock[]
+}
+
+model Stock {
+  id            Int        @id @default(autoincrement())
+
+  productoId    Int
+  almacenId     Int
+  cantidad      Int
+
+  producto      Producto   @relation(fields: [productoId], references: [id], onDelete: Restrict)
+  almacen       Almacen    @relation(fields: [almacenId], references: [id], onDelete: Restrict)
+
+  @@unique([productoId, almacenId])
+  @@index([productoId])
+  @@index([almacenId])
+}
+
+model MedioPago {
+  id            Int        @id @default(autoincrement())
+
+  descripcion   String     @unique
+
+  pedidos       Pedido[]
+}
+
+model Pedido {
+  id            Int        @id @default(autoincrement())
+
+  usuarioDni    String
+  medioPagoId   Int
+
+  estado        EstadoPedido
+
+  fecha         DateTime   @default(now())
+  total         Decimal    @db.Decimal(10,2)
+
+  usuario        Usuario     @relation(fields: [usuarioDni], references: [dni], onDelete: Restrict)
+  medioPago      MedioPago  @relation(fields: [medioPagoId], references: [id], onDelete: Restrict)
+
+  detalles       DetallePedido[]
+  envio          Envio?
+
+  @@index([usuarioDni])
+  @@index([medioPagoId])
+  @@index([estado])
+  @@index([fecha])
+}
+
+model DetallePedido {
+  id               Int        @id @default(autoincrement())
+
+  pedidoId         Int
+  productoId       Int
+
+  cantidad         Int
+  precioUnitario   Decimal    @db.Decimal(10,2)
+
+  pedido           Pedido     @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto         Producto  @relation(fields: [productoId], references: [id], onDelete: Restrict)
+
+  @@index([pedidoId])
+  @@index([productoId])
+}
+
+model Envio {
+  id                  Int             @id @default(autoincrement())
+
+  pedidoId            Int             @unique
+
+  domicilioEntrega    String
+  costo               Decimal         @db.Decimal(10,2)
+
+  fechaTentativa      DateTime
+  fechaEntregado      DateTime?
+
+  estado              EstadoEnvio
+
+  pedido              Pedido          @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@index([estado])
 }
