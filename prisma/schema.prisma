@@ -54,8 +54,8 @@ model Usuario {
 
   rol           Rol
 
-  localidadId   Int?
-  localidad     Localidad? @relation(fields: [localidadId], references: [id], onDelete: SetNull)
+  localidadId   Int
+  localidad     Localidad @relation(fields: [localidadId], references: [id], onDelete: Restrict)
 
   pedidos       Pedido[]
 
