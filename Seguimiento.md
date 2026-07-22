@@ -219,11 +219,7 @@ Todo eso pertenece al Service.
 
 # Repository
 
-Única responsabilidad.
-
-Hablar con Prisma.
-
-Nada más.
+Única responsabilidad: Hablar con Prisma, Nada más.
 
 Ejemplo.
 
@@ -253,9 +249,7 @@ Eso permite cambiar Prisma por otro ORM sin modificar la lógica del negocio.
 
 # Validaciones
 
-No validaría dentro del Controller.
-
-Crearía validadores independientes.
+Validadores independientes.
 
 ```
 POST /usuarios
@@ -339,27 +333,7 @@ Muchísimo más limpio.
 
 ---
 
-# DTO
-
-No usaría DTO por ahora.
-
-¿Por qué?
-
-Proyecto chico.
-
-API sencilla.
-
-Más adelante podrían agregarse.
-
-Pero hoy agregan complejidad innecesaria.
-
----
-
 # Mapper
-
-Sí.
-
-Muy pequeño.
 
 Ejemplo.
 
@@ -403,7 +377,7 @@ prisma/
 
 No mezclar Prisma dentro de src.
 
-Lo dejaría separado.
+Separado.
 
 ---
 
@@ -419,13 +393,10 @@ utils/
     dates.js
 ```
 
-Nada de poner media aplicación ahí.
-
 ---
 
 # Organización final
 
-Yo haría exactamente esto.
 
 ```
 backend/
@@ -448,9 +419,7 @@ backend/
 │      config/
 │
 │      middlewares/
-│
-│      routes/
-│
+││
 │      modules/
 │
 │      utils/
@@ -480,8 +449,6 @@ modules/
     productos/
 
     proveedores/
-
-    inventario/
 
     almacenes/
 
@@ -654,7 +621,6 @@ Pedidos
 |email|String|UNIQUE|
 |password|String||
 |telefono|String||
-|direccion|String||
 |rol|Enum||
 |localidadId|Int|FK|
 
@@ -707,7 +673,7 @@ Pedidos
 |id|Int|
 |nombre|String|
 |descripcion|String|
-|imagen|String?|
+|imagen|relacion (1:N) con ImagenProducto|
 |categoriaId|Int|
 |marcaId|Int|
 |proveedorId|Int|
@@ -734,12 +700,8 @@ El precio vigente se obtiene del historial.
 |Campo|Tipo|
 |---|---|
 |id|Int|
-|nombre|String|
+|descripcion|String|
 |direccion|String|
-
-Agregaría `nombre`.
-
-Si algún día existen varios almacenes es mucho más cómodo que decir "Almacén 1".
 
 ---
 
@@ -752,7 +714,7 @@ Si algún día existen varios almacenes es mucho más cómodo que decir "Almacé
 |almacenId|Int|
 |cantidad|Int|
 
-Y además impondría una restricción única:
+Restricción única:
 
 ```
 (productoId, almacenId)
@@ -767,7 +729,7 @@ Para evitar tener dos registros del mismo producto en el mismo almacén.
 |Campo|Tipo|
 |---|---|
 |id|Int|
-|nombre|String|
+|descripcion|
 
 Por ejemplo:
 
@@ -859,255 +821,116 @@ Pedido
     └─────── Envio (1 : 1)
 ```
 
+Eliminacion:
 
-# Proximo
-## 1. Estructura del proyecto ⭐⭐⭐⭐⭐
+Cascade
 
-Crear toda la estructura del backend.
+- Producto -> ImagenProducto
+- Producto -> Precio
+- Pedido -> DetallePedido
+- Pedido -> Envio
 
-Por ejemplo:
+Restrict
 
-```
-src/
+- Resto de relaciones obligatorias.
 
-app.js
-server.js
-router.js
+# Próximo
 
-config/
-
-middlewares/
-
-errors/
-
-utils/
-
-modules/
-
-    auth/
-
-    usuarios/
-
-    localidades/
-
-    categorias/
-
-    marcas/
-
-    productos/
-
-    proveedores/
-
-    almacenes/
-
-    stock/
-
-    pedidos/
-
-    envios/
-
-    medios-pago/
-```
-
-Eso ya está decidido por la arquitectura que definimos.
-
----
-
-## 2. Crear todos los módulos ⭐⭐⭐⭐⭐
-
-Cada módulo puede tener sus archivos vacíos.
-
-Por ejemplo.
-
-```
-categorias/
-
-categoria.routes.js
-
-categoria.controller.js
-
-categoria.service.js
-
-categoria.repository.js
-
-categoria.validation.js
-
-categoria.mapper.js
-
-index.js
-```
-
-Y repetir la misma plantilla para todos los módulos.
-
----
-
-## 3. Configurar Express ⭐⭐⭐⭐⭐
-
-Crear:
-
-```
-app.js
-
-server.js
-
-router.js
-```
+## 1. Configurar Express
 
 Configurar:
 
-- express
-- cors
+- Express
+- CORS
 - dotenv
 - express.json()
 
-Todavía sin lógica.
+Todavía sin lógica de negocio.
 
 ---
 
-## 4. Middleware global ⭐⭐⭐⭐☆
+## 2. Configurar Prisma
 
-Pueden implementar:
-
-```
-middlewares/
-
-error.middleware.js
-
-not-found.middleware.js
-```
-
-No dependen de la base.
+- Crear el archivo `.env`.
+- Configurar `DATABASE_URL`.
+- Ejecutar la primera migración.
+- Generar Prisma Client.
+- Verificar la conexión con MySQL.
 
 ---
 
-## 5. Manejo de errores ⭐⭐⭐⭐☆
+## 3. Configuración
 
 Crear:
 
 ```
-errors/
-
-ApiError.js
-
-NotFoundError.js
-
-ValidationError.js
-```
-
-Después todos los módulos los reutilizarán.
-
----
-
-## 6. Configuración ⭐⭐⭐⭐☆
-
-```
 config/
 
-env.js
+    env.js
+    database.js
 ```
 
-Leer
-
-```
-PORT
-
-DATABASE_URL
-
-JWT_SECRET
-```
-
-Aunque JWT todavía no exista.
+Centralizar toda la configuración del proyecto.
 
 ---
 
-## 7. Documentación ⭐⭐⭐⭐⭐
+## 4. Middleware global
 
-La documentación de la API ya está prácticamente definida.
-
-Pueden empezar a documentarla con Swagger/OpenAPI o dejar preparados los archivos Markdown para cumplir con la documentación requerida por la cátedra.
-
----
-
-## 8. GitHub Projects ⭐⭐⭐⭐☆
-
-Ya pueden crear:
-
-- Backlog
-- Milestones
-- Issues
-- Labels
-
-Sin tocar una línea de código.
-
----
-
-# Lo que yo haría mañana
-
-Si yo fuera el Tech Lead, dividiría al equipo así:
-
-### Integrante 1
-
-Diseña el DER.
-
-↓
-
-Hace el `schema.prisma`.
-
-↓
-
-Hace las migraciones.
-
----
-
-### Integrante 2
-
-Construye toda la infraestructura.
+Crear:
 
 ```
-src/
-
-config/
-
 middlewares/
 
+    error.middleware.js
+    not-found.middleware.js
+```
+
+Más adelante podrán agregarse autenticación, autorización, logger, etc.
+
+---
+
+## 5. Manejo de errores
+
+Crear las clases de error reutilizables.
+
+```
 errors/
 
-router.js
-
-server.js
-
-app.js
+    ApiError.js
+    NotFoundError.js
+    ValidationError.js
 ```
 
 ---
 
-### Integrante 3
+## 6. Implementar el primer módulo
 
-Crea todos los módulos vacíos.
+Comenzar por **Categorías** para validar toda la arquitectura.
 
 ```
-categorias/
+Route
 
-productos/
+↓
 
-usuarios/
+Controller
 
-...
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Prisma
 ```
 
-Con exactamente la misma estructura.
+Una vez validado este flujo, reutilizar la misma estructura para el resto de los módulos.
 
 ---
 
-### Integrante 4
+## 7. Completar la documentación
 
-Configura la calidad del proyecto.
-
-- ESLint
-- Prettier
-- `.gitignore`
-- `.env.example`
-- Scripts
-- README
-- GitHub Actions (si deciden usar CI)
-- Documentación inicial
+Actualizar la documentación de la API a medida que avance el desarrollo del backend.
