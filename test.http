@@ -1,0 +1,59 @@
+### Crear categoría
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "  Colchones  "
+}
+
+### Listar todas
+GET http://localhost:3000/api/categorias
+
+### Crear otra (para tener más de una)
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Tecnología"
+}
+
+### Probar nombre duplicado (debería fallar con 409)
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Colchones"
+}
+
+### Probar nombre vacío (debería fallar con 400)
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "   "
+}
+
+### Borrar Colchones
+DELETE http://localhost:3000/api/categorias/4
+
+### Borrar Tecnología
+DELETE http://localhost:3000/api/categorias/5
+
+### Crear una para editar
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Electrodomesticos"
+}
+
+### Editar esa categoría (ajustá el id según lo que te devuelva la de arriba)
+PUT http://localhost:3000/api/categorias/7
+Content-Type: application/json
+
+{
+  "nombre": "Electrodomésticos"
+}
+
+### Borrar Electrodomesticos
+DELETE http://localhost:3000/api/categorias/7
