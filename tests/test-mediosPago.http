@@ -34,7 +34,7 @@ Content-Type: application/json
 }
 
 ### Borrar medio de pago
-DELETE http://localhost:3000/api/medios-pago/IDCORRECTO
+DELETE http://localhost:3000/api/medios-pago/5
 
 ### Crear una para editar
 POST http://localhost:3000/api/medios-pago
@@ -45,7 +45,7 @@ Content-Type: application/json
 }
 
 ### Editar ese medio de pago (ajustá el id según lo que te devuelva la de arriba)
-PUT http://localhost:3000/api/medios-pago/6
+PUT http://localhost:3000/api/medios-pago/5
 Content-Type: application/json
 
 {

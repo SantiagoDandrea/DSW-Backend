@@ -3,6 +3,7 @@ import cors from "cors";
 import categoriasRouter from "./modules/categorias/index.js";
 import marcasRouter from "./modules/marcas/index.js";
 import mediosPagoRouter from "./modules/medios-pago/index.js";
+import localidadesRouter from "./modules/localidades/index.js";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/api/categorias", categoriasRouter);
 app.use("/api/marcas", marcasRouter);
 app.use("/api/medios-pago", mediosPagoRouter);
+app.use("/api/localidades", localidadesRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
