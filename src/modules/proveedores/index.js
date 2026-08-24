@@ -1,0 +1,1 @@
+export { default } from "./proveedor.routes.js";

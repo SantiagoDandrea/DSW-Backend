@@ -9,6 +9,15 @@ Content-Type: application/json
 ### Listar todas
 GET http://localhost:3000/api/categorias
 
+### Obtener una por id (ajustá el id)
+GET http://localhost:3000/api/categorias/1
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/categorias/9999
+
+### Probar id no numérico al obtener (debería fallar con 400)
+GET http://localhost:3000/api/categorias/abc
+
 ### Crear otra (para tener más de una)
 POST http://localhost:3000/api/categorias
 Content-Type: application/json

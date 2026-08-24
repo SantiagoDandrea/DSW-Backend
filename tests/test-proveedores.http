@@ -1,0 +1,141 @@
+### Crear proveedor válido (con espacios para probar el trim)
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "  Distribuidora del Sur  ",
+  "cuit": "  20-12345678-9  ",
+  "telefono": "  1145678900  "
+}
+
+### Listar todos
+GET http://localhost:3000/api/proveedores
+
+### Crear otro (para tener más de uno)
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Insumos Norte SA",
+  "cuit": "30-98765432-1",
+  "telefono": "3794123456"
+}
+
+### Obtener uno por id (ajustá el id)
+GET http://localhost:3000/api/proveedores/3
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/proveedores/9999
+
+### Probar id no numérico (debería fallar con 400)
+GET http://localhost:3000/api/proveedores/abc
+
+### Probar CUIT duplicado (debería fallar con 409)
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Otra Razón Social",
+  "cuit": "20-12345678-9",
+  "telefono": "1100000000"
+}
+
+### Probar nombre vacío (debería fallar con 400)
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "   ",
+  "cuit": "27-11223344-5",
+  "telefono": "1100000000"
+}
+
+### Probar CUIT vacío (debería fallar con 400)
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Proveedor Sin CUIT",
+  "cuit": "   ",
+  "telefono": "1100000000"
+}
+
+### Probar CUIT con formato inválido - sin guiones (debería fallar con 400)
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Proveedor CUIT Mal Formado",
+  "cuit": "20123456789",
+  "telefono": "1100000000"
+}
+
+### Probar CUIT con formato inválido - dígitos de más (debería fallar con 400)
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Proveedor CUIT Mal Formado 2",
+  "cuit": "20-123456789-9",
+  "telefono": "1100000000"
+}
+
+### Probar teléfono vacío (debería fallar con 400)
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Proveedor Sin Teléfono",
+  "cuit": "23-44556677-8",
+  "telefono": "   "
+}
+
+### Crear uno para editar
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Proveedor a Editar",
+  "cuit": "24-55667788-3",
+  "telefono": "3415551234"
+}
+
+### Editar ese proveedor, sin conflicto (ajustá el id)
+PUT http://localhost:3000/api/proveedores/6
+Content-Type: application/json
+
+{
+  "nombre": "Proveedor Editado",
+  "cuit": "24-55667788-3",
+  "telefono": "3415559999"
+}
+
+### Probar editar generando CUIT duplicado (debería fallar con 409, usar el id de arriba con el CUIT de Distribuidora del Sur)
+PUT http://localhost:3000/api/proveedores/6
+Content-Type: application/json
+
+{
+  "nombre": "Proveedor Editado",
+  "cuit": "20-12345678-9",
+  "telefono": "3415559999"
+}
+
+### Probar editar id inexistente (debería fallar con 404)
+PUT http://localhost:3000/api/proveedores/9999
+Content-Type: application/json
+
+{
+  "nombre": "No Existe",
+  "cuit": "25-66778899-4",
+  "telefono": "1100000000"
+}
+
+### Borrar el proveedor editado (ajustá el id)
+DELETE http://localhost:3000/api/proveedores/ID
+
+### Probar borrar id inexistente (debería fallar con 404)
+DELETE http://localhost:3000/api/proveedores/9999
+
+### Probar borrar un proveedor con productos asociados (debería fallar con 409)
+### Requiere crear antes un producto con este proveedorId a través del módulo de productos
+DELETE http://localhost:3000/api/proveedores/1

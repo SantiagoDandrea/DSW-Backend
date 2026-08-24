@@ -9,6 +9,15 @@ Content-Type: application/json
 ### Listar todas
 GET http://localhost:3000/api/medios-pago
 
+### Obtener uno por id (ajustá el id)
+GET http://localhost:3000/api/medios-pago/1
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/medios-pago/9999
+
+### Probar id no numérico al obtener (debería fallar con 400)
+GET http://localhost:3000/api/medios-pago/abc
+
 ### Crear otra (para tener más de una)
 POST http://localhost:3000/api/medios-pago
 Content-Type: application/json

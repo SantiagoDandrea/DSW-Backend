@@ -9,6 +9,15 @@ Content-Type: application/json
 ### Listar todas
 GET http://localhost:3000/api/marcas
 
+### Obtener una por id (ajustá el id)
+GET http://localhost:3000/api/marcas/1
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/marcas/9999
+
+### Probar id no numérico al obtener (debería fallar con 400)
+GET http://localhost:3000/api/marcas/abc
+
 ### Crear otra (para tener más de una)
 POST http://localhost:3000/api/marcas
 Content-Type: application/json
