@@ -40,6 +40,8 @@ model Localidad {
   provincia     String
 
   usuarios      Usuario[]
+
+  @@unique([nombre, codigoPostal])
 }
 
 model Usuario {

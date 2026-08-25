@@ -1,0 +1,64 @@
+### Crear medio de pago
+POST http://localhost:3000/api/medios-pago
+Content-Type: application/json
+
+{
+  "descripcion": "  Tarjeta de crédito  "
+}
+
+### Listar todas
+GET http://localhost:3000/api/medios-pago
+
+### Obtener uno por id (ajustá el id)
+GET http://localhost:3000/api/medios-pago/1
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/medios-pago/9999
+
+### Probar id no numérico al obtener (debería fallar con 400)
+GET http://localhost:3000/api/medios-pago/abc
+
+### Crear otra (para tener más de una)
+POST http://localhost:3000/api/medios-pago
+Content-Type: application/json
+
+{
+  "descripcion": "Efectivo"
+}
+
+### Probar descripción duplicada (debería fallar con 409)
+POST http://localhost:3000/api/medios-pago
+Content-Type: application/json
+
+{
+  "descripcion": "  Efectivo  "
+}
+
+### Probar descripción vacía (debería fallar con 400)
+POST http://localhost:3000/api/medios-pago
+Content-Type: application/json
+
+{
+  "descripcion": "   "
+}
+
+### Borrar medio de pago
+DELETE http://localhost:3000/api/medios-pago/5
+
+### Crear una para editar
+POST http://localhost:3000/api/medios-pago
+Content-Type: application/json
+
+{
+  "descripcion": "Tarjeta de debito"
+}
+
+### Editar ese medio de pago (ajustá el id según lo que te devuelva la de arriba)
+PUT http://localhost:3000/api/medios-pago/5
+Content-Type: application/json
+
+{
+  "descripcion": "Tarjeta de débito"
+}
+
+

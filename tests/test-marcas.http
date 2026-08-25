@@ -1,0 +1,64 @@
+### Crear marca
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "  Xiaomi  "
+}
+
+### Listar todas
+GET http://localhost:3000/api/marcas
+
+### Obtener una por id (ajustá el id)
+GET http://localhost:3000/api/marcas/1
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/marcas/9999
+
+### Probar id no numérico al obtener (debería fallar con 400)
+GET http://localhost:3000/api/marcas/abc
+
+### Crear otra (para tener más de una)
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "Motorola"
+}
+
+### Probar nombre duplicado (debería fallar con 409)
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "Xiaomi"
+}
+
+### Probar nombre vacío (debería fallar con 400)
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "   "
+}
+
+### Borrar marca
+DELETE http://localhost:3000/api/marcas/4
+
+### Crear una para editar
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "Samsun"
+}
+
+### Editar esa marca (ajustá el id según lo que te devuelva la de arriba)
+PUT http://localhost:3000/api/marcas/6
+Content-Type: application/json
+
+{
+  "nombre": "Samsung"
+}
+
+

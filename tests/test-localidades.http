@@ -1,0 +1,184 @@
+### Crear localidad válida
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "  Rosario  ",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
+
+### Listar todas
+GET http://localhost:3000/api/localidades
+
+### Obtener una por id (ajustá el id)
+GET http://localhost:3000/api/localidades/1
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/localidades/9999
+
+### Probar id no numérico al obtener (debería fallar con 400)
+GET http://localhost:3000/api/localidades/abc
+
+### Crear otra (misma provincia, distinto nombre y CP)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Santa Fe",
+  "codigoPostal": "3000",
+  "provincia": "Santa Fe"
+}
+
+### Crear otra (provincia distinta)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Córdoba",
+  "codigoPostal": "5000",
+  "provincia": "Córdoba"
+}
+
+### Probar combinación duplicada exacta (mismo nombre y mismo CP) - debería fallar con 409
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
+
+### Probar mismo nombre pero CP distinto - NO debería fallar (nombre solo no es único)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "9999",
+  "provincia": "Buenos Aires"
+}
+
+### Probar mismo CP pero nombre distinto - NO debería fallar (codigoPostal solo no es único)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Otra Localidad",
+  "codigoPostal": "2000",
+  "provincia": "Entre Ríos"
+}
+
+### Probar provincia inválida (debería fallar con 400)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Ciudad Inventada",
+  "codigoPostal": "1234",
+  "provincia": "Marte"
+}
+
+### Probar nombre vacío (debería fallar con 400)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "   ",
+  "codigoPostal": "1234",
+  "provincia": "Santa Fe"
+}
+
+### Probar código postal vacío (debería fallar con 400)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Test",
+  "codigoPostal": "   ",
+  "provincia": "Santa Fe"
+}
+
+### Probar trim en codigoPostal y provincia (con espacios de más en ambos)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Flores",
+  "codigoPostal": "  420  ",
+  "provincia": "  Buenos Aires  "
+}
+
+### Crear una para editar
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Ushuaia",
+  "codigoPostal": "9410",
+  "provincia": "Tierra del Fuego"
+}
+
+### Editar esa localidad, sin conflicto (ajustá el id)
+PUT http://localhost:3000/api/localidades/7
+Content-Type: application/json
+
+{
+  "nombre": "Ushuaia",
+  "codigoPostal": "9411",
+  "provincia": "Tierra del Fuego"
+}
+
+### Probar editar generando duplicado (debería fallar con 409, usar el id de Ushuaia y el CP de Rosario)
+PUT http://localhost:3000/api/localidades/ID
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
+
+### Borrar una localidad (ajustá el id)
+DELETE http://localhost:3000/api/localidades/7
+
+### Probar combinación duplicada exacta (mismo nombre y mismo CP) - debería fallar con 409
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
+
+### Probar mismo nombre pero CP distinto - NO debería fallar (nombre solo no es único)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "9999",
+  "provincia": "Buenos Aires"
+}
+
+### Probar mismo CP pero nombre distinto - NO debería fallar (codigoPostal solo no es único)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Otra Localidad",
+  "codigoPostal": "2000",
+  "provincia": "Entre Ríos"
+}
+
+### Probar editar generando duplicado (debería fallar con 409, usar id de Santa Fe con datos de Rosario)
+PUT http://localhost:3000/api/localidades/2
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
