@@ -5,6 +5,7 @@ import marcasRouter from "./modules/marcas/index.js";
 import mediosPagoRouter from "./modules/medios-pago/index.js";
 import localidadesRouter from "./modules/localidades/index.js";
 import proveedoresRouter from "./modules/proveedores/index.js";
+import productosRouter from "./modules/productos/index.js";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
@@ -18,6 +19,7 @@ app.use("/api/marcas", marcasRouter);
 app.use("/api/medios-pago", mediosPagoRouter);
 app.use("/api/localidades", localidadesRouter);
 app.use("/api/proveedores", proveedoresRouter);
+app.use("/api/productos", productosRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
