@@ -1,0 +1,202 @@
+### Crear categoría, marca y proveedor de apoyo (anotá los ids que te devuelva cada uno)
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Notebooks"
+}
+
+###
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "Lenovo"
+}
+
+###
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Tech Import SA",
+  "cuit": "20-33445566-7",
+  "telefono": "1145678900"
+}
+
+### Probar categoriaId inexistente (debería fallar con 404, usar marcaId/proveedorId reales)
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Notebook X1",
+  "descripcion": "14 pulgadas, 16GB RAM",
+  "categoriaId": 9999,
+  "marcaId": 9,
+  "proveedorId": 8,
+  "precio": 1500.50
+}
+
+### Crear producto válido (producto + primer precio en una sola transacción, ajustá los ids)
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Notebook X1",
+  "descripcion": "14 pulgadas, 16GB RAM",
+  "categoriaId": 10,
+  "marcaId": 9,
+  "proveedorId": 8,
+  "precio": 1500.50
+}
+
+### Probar precio negativo (debería fallar con 400)
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Producto Precio Malo",
+  "descripcion": "desc",
+  "categoriaId": 10,
+  "marcaId": 9,
+  "proveedorId": 8,
+  "precio": -5
+}
+
+### Listar todos (trae categoría, marca, proveedor, precioActual e imágenes)
+GET http://localhost:3000/api/productos
+
+### Obtener uno por id (ajustá el id)
+GET http://localhost:3000/api/productos/3
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/productos/9999
+
+### Probar id no numérico (debería fallar con 400)
+GET http://localhost:3000/api/productos/abc
+
+### Filtrar por categoriaId
+GET http://localhost:3000/api/productos?categoriaId=10
+
+### Filtrar por rango de precio que incluye al producto
+GET http://localhost:3000/api/productos?precioMin=1000&precioMax=2000
+
+### Filtrar por rango de precio que lo excluye (debería devolver [])
+GET http://localhost:3000/api/productos?precioMin=5000&precioMax=6000
+
+### Probar precioMin mayor que precioMax (debería fallar con 400)
+GET http://localhost:3000/api/productos?precioMin=2000&precioMax=1000
+
+### Editar producto (no toca el precio, ajustá el id y los ids de FK)
+PUT http://localhost:3000/api/productos/ID
+Content-Type: application/json
+
+{
+  "nombre": "Notebook X1 Pro",
+  "descripcion": "14 pulgadas, 16GB RAM, actualizada",
+  "categoriaId": ID_CATEGORIA,
+  "marcaId": ID_MARCA,
+  "proveedorId": ID_PROVEEDOR
+}
+
+### Probar editar con marcaId inexistente (debería fallar con 404)
+PUT http://localhost:3000/api/productos/ID
+Content-Type: application/json
+
+{
+  "nombre": "Notebook X1 Pro",
+  "descripcion": "desc",
+  "categoriaId": ID_CATEGORIA,
+  "marcaId": 9999,
+  "proveedorId": ID_PROVEEDOR
+}
+
+### Probar editar id inexistente (debería fallar con 404)
+PUT http://localhost:3000/api/productos/9999
+Content-Type: application/json
+
+{
+  "nombre": "No Existe",
+  "descripcion": "desc",
+  "categoriaId": ID_CATEGORIA,
+  "marcaId": ID_MARCA,
+  "proveedorId": ID_PROVEEDOR
+}
+
+### --- Historial de precios ---
+
+### Ver historial de precios (ajustá el id, debería tener 1 precio)
+GET http://localhost:3000/api/productos/3/precios
+
+### Agregar un nuevo precio (el anterior queda como histórico)
+POST http://localhost:3000/api/productos/3/precios
+Content-Type: application/json
+
+{
+  "valor": 1800
+}
+
+### Ver historial de nuevo (debería tener 2, el más nuevo primero)
+GET http://localhost:3000/api/productos/3/precios
+
+### Ver el producto (precioActual debería ser el nuevo valor)
+GET http://localhost:3000/api/productos/3
+
+### Probar agregar precio a producto inexistente (debería fallar con 404)
+POST http://localhost:3000/api/productos/9999/precios
+Content-Type: application/json
+
+{
+  "valor": 100
+}
+
+### Probar agregar precio inválido (debería fallar con 400)
+POST http://localhost:3000/api/productos/3/precios
+Content-Type: application/json
+
+{
+  "valor": 0
+}
+
+### --- Imágenes ---
+
+### Probar url inválida (debería fallar con 400)
+POST http://localhost:3000/api/productos/3/imagenes
+Content-Type: application/json
+
+{
+  "url": "no-es-una-url"
+}
+
+### Agregar una imagen válida (ajustá el id del producto)
+POST http://localhost:3000/api/productos/3/imagenes
+Content-Type: application/json
+
+{
+  "url": "https://example.com/notebook-x1.jpg",
+  "orden": 1
+}
+
+### Listar imágenes del producto
+GET http://localhost:3000/api/productos/3/imagenes
+
+### Ver el producto (debería traer la imagen en el array)
+GET http://localhost:3000/api/productos/3
+
+### Borrar la imagen (ruta plana, ajustá el id de la IMAGEN, no del producto)
+DELETE http://localhost:3000/api/productos/imagenes/2
+
+### Probar borrar imagen inexistente (debería fallar con 404)
+DELETE http://localhost:3000/api/productos/imagenes/9999
+
+### --- Eliminar producto ---
+
+### Probar borrar id inexistente (debería fallar con 404)
+DELETE http://localhost:3000/api/productos/9999
+
+### Borrar el producto (ajustá el id)
+DELETE http://localhost:3000/api/productos/ID
+
+### Probar borrar un producto con stock o pedidos asociados (debería fallar con 409)
+### Requiere crear antes un registro de Stock con este productoId (el módulo almacenes/stock todavía no existe)
+DELETE http://localhost:3000/api/productos/ID

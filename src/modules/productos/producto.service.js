@@ -1,61 +1,162 @@
 import { Prisma } from "@prisma/client";
 import { productoRepository } from "./producto.repository.js";
+import { categoriaRepository } from "../categorias/categoria.repository.js";
+import { marcaRepository } from "../marcas/marca.repository.js";
+import { proveedorRepository } from "../proveedores/proveedor.repository.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
 
-const MENSAJE_RELACION_INEXISTENTE =
-  "La categoría, marca o proveedor indicado no existe.";
 const MENSAJE_REGISTROS_ASOCIADOS =
-  "No se puede eliminar este producto porque tiene stock o pedidos asociados.";
+  "No se puede eliminar este producto porque tiene stock o pedidos asociados. Reasigná o eliminá esos registros primero.";
 
-function esRelacionInexistente(err) {
-  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003";  //P2003 en Prisma quiere decir genéricamente "violación de una restricción de clave foránea"
-}
 function esRegistroNoEncontrado(err) {
-  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025"; //P2025 en Prisma quiere decir genéricamente "registro no encontrado"
+  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025";
 }
+
 function esRestriccionDeEliminacion(err) {
   return (
     err instanceof Prisma.PrismaClientKnownRequestError &&
     (err.code === "P2003" || err.code === "P2014")
   );
 }
+
 function mensajeNoExiste(id) {
   return `No existe un producto con id ${id}.`;
 }
 
+async function validarReferencias({ categoriaId, marcaId, proveedorId }) {
+  const [categoria, marca, proveedor] = await Promise.all([
+    categoriaRepository.obtenerCategoriaPorId(categoriaId),
+    marcaRepository.obtenerMarcaPorId(marcaId),
+    proveedorRepository.obtenerProveedorPorId(proveedorId),
+  ]);
+
+  if (!categoria) {
+    throw new NotFoundError(`No existe una categoría con id ${categoriaId}.`);
+  }
+  if (!marca) {
+    throw new NotFoundError(`No existe una marca con id ${marcaId}.`);
+  }
+  if (!proveedor) {
+    throw new NotFoundError(`No existe un proveedor con id ${proveedorId}.`);
+  }
+}
+
+async function asegurarProductoExiste(productoId) {
+  const producto = await productoRepository.existeProducto(productoId);
+
+  if (!producto) {
+    throw new NotFoundError(mensajeNoExiste(productoId));
+  }
+}
+
 export const productoService = {
-  async crearProducto(datos) {
-    try {
-      return await productoRepository.crearProducto(datos);
-    } catch (err) {
-      if (esRelacionInexistente(err)) throw new ConflictError(MENSAJE_RELACION_INEXISTENTE);
-      throw err;   //Al crear/actualizar: intentás que un producto apunte hacia una categoría/marca/proveedor que no existe
+  async crearProducto({ nombre, descripcion, categoriaId, marcaId, proveedorId, precio }) {
+    await validarReferencias({ categoriaId, marcaId, proveedorId });
+
+    return productoRepository.crearProductoConPrecio({
+      nombre,
+      descripcion,
+      categoriaId,
+      marcaId,
+      proveedorId,
+      precio,
+    });
+  },
+
+  async obtenerProductos(filtros) {
+    const productos = await productoRepository.obtenerProductos(filtros);
+
+    if (filtros.precioMin === undefined && filtros.precioMax === undefined) {
+      return productos;
     }
+
+    return productos.filter((producto) => {
+      const precioVigente = producto.precios[0] ? Number(producto.precios[0].valor) : null;
+
+      if (precioVigente === null) {
+        return false;
+      }
+      if (filtros.precioMin !== undefined && precioVigente < filtros.precioMin) {
+        return false;
+      }
+      if (filtros.precioMax !== undefined && precioVigente > filtros.precioMax) {
+        return false;
+      }
+      return true;
+    });
   },
-  obtenerProductos() {
-    return productoRepository.obtenerProductos();
-  },
+
   async obtenerProductoPorId(id) {
     const producto = await productoRepository.obtenerProductoPorId(id);
-    if (!producto) throw new NotFoundError(mensajeNoExiste(id));
+
+    if (!producto) {
+      throw new NotFoundError(mensajeNoExiste(id));
+    }
+
     return producto;
   },
-  async actualizarProducto(id, datos) {
+
+  async actualizarProducto(id, { nombre, descripcion, categoriaId, marcaId, proveedorId }) {
+    await validarReferencias({ categoriaId, marcaId, proveedorId });
+
     try {
-      return await productoRepository.actualizarProducto(id, datos);
+      return await productoRepository.actualizarProducto(id, {
+        nombre,
+        descripcion,
+        categoriaId,
+        marcaId,
+        proveedorId,
+      });
     } catch (err) {
-      if (esRelacionInexistente(err)) throw new ConflictError(MENSAJE_RELACION_INEXISTENTE);
-      if (esRegistroNoEncontrado(err)) throw new NotFoundError(mensajeNoExiste(id));
+      if (esRegistroNoEncontrado(err)) {
+        throw new NotFoundError(mensajeNoExiste(id));
+      }
       throw err;
     }
   },
-  async eliminarProducto(id) {   //Al eliminar: intentás borrar un producto que otros registros apuntan hacia él
+
+  async eliminarProducto(id) {
     try {
       await productoRepository.eliminarProducto(id);
     } catch (err) {
-      if (esRegistroNoEncontrado(err)) throw new NotFoundError(mensajeNoExiste(id));
-      if (esRestriccionDeEliminacion(err)) throw new ConflictError(MENSAJE_REGISTROS_ASOCIADOS);
+      if (esRegistroNoEncontrado(err)) {
+        throw new NotFoundError(mensajeNoExiste(id));
+      }
+      if (esRestriccionDeEliminacion(err)) {
+        throw new ConflictError(MENSAJE_REGISTROS_ASOCIADOS);
+      }
+      throw err;
+    }
+  },
+
+  async agregarPrecio(productoId, { valor }) {
+    await asegurarProductoExiste(productoId);
+    return productoRepository.crearPrecio({ productoId, valor });
+  },
+
+  async obtenerHistorialPrecios(productoId) {
+    await asegurarProductoExiste(productoId);
+    return productoRepository.obtenerPreciosDeProducto(productoId);
+  },
+
+  async agregarImagen(productoId, { url, orden }) {
+    await asegurarProductoExiste(productoId);
+    return productoRepository.crearImagen({ productoId, url, orden });
+  },
+
+  async obtenerImagenes(productoId) {
+    await asegurarProductoExiste(productoId);
+    return productoRepository.obtenerImagenesDeProducto(productoId);
+  },
+
+  async eliminarImagen(id) {
+    try {
+      await productoRepository.eliminarImagen(id);
+    } catch (err) {
+      if (esRegistroNoEncontrado(err)) {
+        throw new NotFoundError(`No existe una imagen con id ${id}.`);
+      }
       throw err;
     }
   },
