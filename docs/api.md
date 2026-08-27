@@ -66,40 +66,48 @@ Elimina una localidad.
 
 ## GET /productos
 
-Listado de productos.
+Listado de productos. Incluye categoría, marca, proveedor, precio vigente e imágenes de cada uno.
 
-Filtros:
+Filtros (query params, todos opcionales):
 
-- categoría
-- marca
-- nombre
+- categoriaId
+- marcaId
+- nombre (búsqueda parcial)
 - precioMin
-- precioMax
+- precioMax (filtran sobre el precio vigente)
 
 ## GET /productos/:id
 
-Detalle del producto.
+Detalle del producto. Incluye categoría, marca, proveedor, precio vigente e imágenes.
 
-Incluye:
-
-- categoría
-- marca
-- precio vigente
-- proveedor
-- stock
-- almacenes
+Nota: `stock` y `almacenes` todavía no se incluyen — se agregan cuando se implemente ese módulo.
 
 ## POST /productos
 
-Crea un producto.
+Crea un producto junto con su primer precio, en una sola operación atómica.
+
+Body:
+
+```json
+{
+  "nombre": "string",
+  "descripcion": "string",
+  "categoriaId": 1,
+  "marcaId": 1,
+  "proveedorId": 1,
+  "precio": 199.99
+}
+```
+
+`categoriaId`, `marcaId` y `proveedorId` deben existir (404 si no).
 
 ## PUT /productos/:id
 
-Actualiza un producto.
+Actualiza los datos del producto (nombre, descripción, categoría, marca, proveedor). No modifica el precio — para eso usar el endpoint de precios.
 
 ## DELETE /productos/:id
 
-Elimina un producto.
+Elimina un producto. Falla con 409 si tiene stock o pedidos asociados.
 
 ---
 
@@ -107,13 +115,27 @@ Elimina un producto.
 
 ### GET /productos/:id/precios
 
-Obtiene todos los precios del producto.
+Obtiene todos los precios del producto, más reciente primero.
 
 ### POST /productos/:id/precios
 
-Agrega un nuevo precio.
+Agrega un nuevo precio (`{ "valor": number }`). El precio anterior queda como histórico — no se borra, simplemente deja de ser el vigente (el vigente es el de `fechaDesde` más reciente).
 
-El precio anterior queda como histórico.
+---
+
+## Imágenes
+
+### GET /productos/:id/imagenes
+
+Obtiene todas las imágenes del producto.
+
+### POST /productos/:id/imagenes
+
+Agrega una imagen (`{ "url": string, "orden"?: number }`).
+
+### DELETE /productos/imagenes/:id
+
+Elimina una imagen por su propio id (no requiere el id del producto).
 
 ---
 
