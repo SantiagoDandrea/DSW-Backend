@@ -22,24 +22,52 @@ Obtiene la información del usuario autenticado.
 # Usuarios
 
 ## GET /usuarios
-Obtiene todos los usuarios.
 
-Filtros:
-- nombre
-- apellido
-- rol
+Listado de usuarios. Incluye la localidad resuelta (`{ id, nombre }`) de cada uno. La respuesta nunca incluye `password`.
 
-## GET /usuarios/:id
-Obtiene un usuario.
+Filtros (query params, todos opcionales):
+
+- nombre (búsqueda parcial)
+- apellido (búsqueda parcial)
+- rol (`ADMIN` o `CLIENTE`)
+
+## GET /usuarios/:dni
+
+Detalle de un usuario. Incluye la localidad resuelta. Nunca incluye `password`.
 
 ## POST /usuarios
+
 Crea un usuario.
 
-## PUT /usuarios/:id
-Actualiza un usuario.
+Body:
 
-## DELETE /usuarios/:id
-Elimina un usuario.
+```json
+{
+  "dni": "30111222",
+  "nombre": "string",
+  "apellido": "string",
+  "email": "string",
+  "password": "string",
+  "telefono": "string",
+  "rol": "ADMIN | CLIENTE",
+  "localidadId": 1
+}
+```
+
+- `dni` es la clave primaria (no autoincremental): 7 u 8 dígitos numéricos, lo define el cliente.
+- `password`: mínimo 8 caracteres, al menos una mayúscula, una minúscula y un número. Se guarda hasheado (bcrypt) — nunca se persiste ni se devuelve en texto plano.
+- `email` debe ser único (409 si ya existe otro usuario con ese email).
+- `localidadId` debe existir (404 si no).
+
+## PUT /usuarios/:dni
+
+Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad). El `dni` no se puede modificar por esta vía.
+
+`password` es opcional: si se manda, se valida y se hashea de nuevo, reemplazando el hash guardado. Si no se manda, la contraseña actual no se toca.
+
+## DELETE /usuarios/:dni
+
+Elimina un usuario. Falla con 409 si tiene pedidos asociados.
 
 ---
 
