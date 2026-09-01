@@ -1,0 +1,144 @@
+### Crear almacén válido (con espacios para probar el trim)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "  Almacén Central  ",
+  "direccion": "  Av. Pellegrini 1234  "
+}
+
+### Listar todos los almacenes
+GET http://localhost:3000/api/almacenes
+
+### Crear otro almacén
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén Norte",
+  "direccion": "Bv. Oroño 2500"
+}
+
+### Obtener un almacén por id
+### Ajustar el id según el resultado de las requests anteriores
+GET http://localhost:3000/api/almacenes/1
+
+### Probar id inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/almacenes/9999
+
+### Probar id no numérico (debería fallar con 400)
+GET http://localhost:3000/api/almacenes/abc
+
+### Probar descripción vacía (debería fallar con 400)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "   ",
+  "direccion": "Av. Pellegrini 1234"
+}
+
+### Probar dirección vacía (debería fallar con 400)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén sin dirección",
+  "direccion": "   "
+}
+
+### Probar descripción ausente (debería fallar con 400)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "direccion": "Av. Pellegrini 1234"
+}
+
+### Probar dirección ausente (debería fallar con 400)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén sin dirección"
+}
+
+### Probar descripción que no sea texto (debería fallar con 400)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": 123,
+  "direccion": "Av. Pellegrini 1234"
+}
+
+### Probar dirección que no sea texto (debería fallar con 400)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén inválido",
+  "direccion": 123
+}
+
+### Crear un almacén para editar
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén a Editar",
+  "direccion": "Dirección Original 100"
+}
+
+### Editar el almacén
+### Ajustar el id según el resultado de la request anterior
+PUT http://localhost:3000/api/almacenes/5
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén Editado",
+  "direccion": "Nueva Dirección 200"
+}
+
+### Obtener el almacén editado
+### Ajustar el id
+GET http://localhost:3000/api/almacenes/5
+
+### Probar editar id inexistente (debería fallar con 404)
+PUT http://localhost:3000/api/almacenes/9999
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén inexistente",
+  "direccion": "Dirección inexistente"
+}
+
+### Probar editar con descripción vacía (debería fallar con 400)
+PUT http://localhost:3000/api/almacenes/5
+Content-Type: application/json
+
+{
+  "descripcion": "   ",
+  "direccion": "Nueva Dirección 300"
+}
+
+### Probar editar con dirección vacía (debería fallar con 400)
+PUT http://localhost:3000/api/almacenes/3
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén Editado",
+  "direccion": "   "
+}
+
+### Borrar el almacén editado
+### Ajustar el id
+DELETE http://localhost:3000/api/almacenes/5
+
+### Probar borrar id inexistente (debería fallar con 404)
+DELETE http://localhost:3000/api/almacenes/9999
+
+### Probar borrar almacén con stock asociado (debería fallar con 409)
+### Este test se podrá ejecutar cuando exista un registro de Stock
+### asociado al almacén indicado.
+DELETE http://localhost:3000/api/almacenes/1

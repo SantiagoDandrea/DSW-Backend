@@ -1,0 +1,1 @@
+export { default } from "./almacen.routes.js";
