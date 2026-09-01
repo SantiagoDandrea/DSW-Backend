@@ -1,0 +1,246 @@
+### Crear localidad de apoyo (anotá el id que te devuelva)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
+
+### Probar localidadId inexistente (debería fallar con 404, ajustá localidadId real más abajo si hace falta)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111222",
+  "nombre": "Ana",
+  "apellido": "Perez",
+  "email": "ana@test.com",
+  "password": "Passw0rd",
+  "telefono": "1145551234",
+  "rol": "CLIENTE",
+  "localidadId": 9999
+}
+
+### Crear usuario válido (ajustá localidadId, la respuesta NO debe traer password)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111222",
+  "nombre": "Ana",
+  "apellido": "Perez",
+  "email": "ana@test.com",
+  "password": "Passw0rd",
+  "telefono": "1145551234",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar DNI inválido - con letras (debería fallar con 400)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "abc123",
+  "nombre": "X",
+  "apellido": "X",
+  "email": "x1@test.com",
+  "password": "Passw0rd",
+  "telefono": "111",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar DNI inválido - muy corto (debería fallar con 400)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "123",
+  "nombre": "X",
+  "apellido": "X",
+  "email": "x1b@test.com",
+  "password": "Passw0rd",
+  "telefono": "111",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar password sin mayúscula (debería fallar con 400)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111333",
+  "nombre": "X",
+  "apellido": "X",
+  "email": "x2@test.com",
+  "password": "password1",
+  "telefono": "111",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar password sin número (debería fallar con 400)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111334",
+  "nombre": "X",
+  "apellido": "X",
+  "email": "x2b@test.com",
+  "password": "Password",
+  "telefono": "111",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar password corta (menos de 8 caracteres, debería fallar con 400)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111335",
+  "nombre": "X",
+  "apellido": "X",
+  "email": "x2c@test.com",
+  "password": "Pass1",
+  "telefono": "111",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar rol inválido (debería fallar con 400)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111444",
+  "nombre": "X",
+  "apellido": "X",
+  "email": "x3@test.com",
+  "password": "Passw0rd",
+  "telefono": "111",
+  "rol": "MARCIANO",
+  "localidadId": 10
+}
+
+### Probar email inválido (debería fallar con 400)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111445",
+  "nombre": "X",
+  "apellido": "X",
+  "email": "no-es-un-email",
+  "password": "Passw0rd",
+  "telefono": "111",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar email duplicado (debería fallar con 409, usa el email de Ana)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111555",
+  "nombre": "Otro",
+  "apellido": "Apellido",
+  "email": "ana@test.com",
+  "password": "Passw0rd",
+  "telefono": "111",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Obtener por dni (debería devolver a Ana, sin password)
+GET http://localhost:3000/api/usuarios/30111222
+
+### Probar dni inexistente al obtener (debería fallar con 404)
+GET http://localhost:3000/api/usuarios/99999999
+
+### Probar dni no válido al obtener - muy corto (debería fallar con 400)
+GET http://localhost:3000/api/usuarios/123
+
+### Listar todos
+GET http://localhost:3000/api/usuarios
+
+### Filtrar por apellido
+GET http://localhost:3000/api/usuarios?apellido=Perez
+
+### Filtrar por nombre
+GET http://localhost:3000/api/usuarios?nombre=Ana
+
+### Filtrar por rol
+GET http://localhost:3000/api/usuarios?rol=CLIENTE
+
+### Probar filtro de rol inválido (debería fallar con 400)
+GET http://localhost:3000/api/usuarios?rol=MARCIANO
+
+### Editar usuario SIN mandar password (no debería tocar la contraseña guardada, ajustá localidadId)
+PUT http://localhost:3000/api/usuarios/30111222
+Content-Type: application/json
+
+{
+  "nombre": "Ana Maria",
+  "apellido": "Perez",
+  "email": "ana@test.com",
+  "telefono": "1145559999",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Editar usuario CON password nueva (esta sí debería actualizar el hash)
+PUT http://localhost:3000/api/usuarios/30111222
+Content-Type: application/json
+
+{
+  "nombre": "Ana Maria",
+  "apellido": "Perez",
+  "email": "ana@test.com",
+  "telefono": "1145559999",
+  "rol": "CLIENTE",
+  "localidadId": 10,
+  "password": "NuevaPass1"
+}
+
+### Probar editar con email de otro usuario (debería fallar con 409, requiere un segundo usuario ya creado)
+PUT http://localhost:3000/api/usuarios/30111222
+Content-Type: application/json
+
+{
+  "nombre": "Ana Maria",
+  "apellido": "Perez",
+  "email": "otro-usuario@test.com",
+  "telefono": "1145559999",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar editar dni inexistente (debería fallar con 404)
+PUT http://localhost:3000/api/usuarios/99999999
+Content-Type: application/json
+
+{
+  "nombre": "X",
+  "apellido": "X",
+  "email": "noexiste@test.com",
+  "telefono": "111",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### Probar borrar dni inexistente (debería fallar con 404)
+DELETE http://localhost:3000/api/usuarios/99999999
+
+### Probar borrar un usuario con pedidos asociados (debería fallar con 409)
+### Requiere crear antes un Pedido con este usuarioDni a través del módulo de pedidos (todavía no existe)
+DELETE http://localhost:3000/api/usuarios/30111222
+
+### Borrar el usuario (una vez que no tenga pedidos asociados)
+DELETE http://localhost:3000/api/usuarios/30111222
