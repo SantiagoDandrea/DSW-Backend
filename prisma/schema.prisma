@@ -132,6 +132,7 @@ model Precio {
 
   producto      Producto   @relation(fields: [productoId], references: [id], onDelete: Cascade)
 
+  @@unique([productoId, fechaDesde])
   @@index([productoId])
   @@index([fechaDesde])
 }
