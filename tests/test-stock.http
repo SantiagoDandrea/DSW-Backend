@@ -1,0 +1,287 @@
+### ============================================================
+### DATOS DE APOYO
+### Crear dos almacenes para probar el stock en distintos lugares
+### Anotá los IDs que devuelvan las requests.
+### ============================================================
+
+### Crear almacén para Stock 1
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén Stock Central",
+  "direccion": "Av. Pellegrini 1500"
+}
+
+### Crear almacén para Stock 2
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén Stock Norte",
+  "direccion": "Bv. Rondeau 1800"
+}
+
+### Crear categoría de apoyo
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Stock - Tecnología"
+}
+
+### Crear marca de apoyo
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "Stock - Marca"
+}
+
+### Crear proveedor de apoyo
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Stock - Proveedor",
+  "cuit": "20-99887766-5",
+  "telefono": "3415550000"
+}
+
+### Crear producto de apoyo
+### Ajustar categoriaId, marcaId y proveedorId con los IDs reales
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Producto de prueba Stock",
+  "descripcion": "Producto creado para probar el CRUD de Stock",
+  "categoriaId": ID_CATEGORIA,
+  "marcaId": ID_MARCA,
+  "proveedorId": ID_PROVEEDOR,
+  "precio": 100000
+}
+
+
+### ============================================================
+### LISTADO
+### ============================================================
+
+### Listar todos los registros de stock
+GET http://localhost:3000/api/stock
+
+
+### ============================================================
+### CREAR STOCK
+### ============================================================
+
+### Crear stock válido en el primer almacén
+### Ajustar productoId y almacenId
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 10
+}
+
+### Crear stock del mismo producto en el segundo almacén
+### Ajustar IDs
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_2,
+  "cantidad": 5
+}
+
+### Probar cantidad igual a 0 (debería ser válido)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 0
+}
+
+### Probar stock duplicado
+### Debe usar la misma combinación producto + almacén
+### (debería fallar con 409)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 20
+}
+
+### Probar producto inexistente (debería fallar con 409)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": 9999,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 10
+}
+
+### Probar almacén inexistente (debería fallar con 409)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": 9999,
+  "cantidad": 10
+}
+
+### Probar cantidad negativa (debería fallar con 400)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": -1
+}
+
+### Probar cantidad decimal (debería fallar con 400)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 10.5
+}
+
+### Probar productoId inválido (debería fallar con 400)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": "abc",
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 10
+}
+
+
+### ============================================================
+### OBTENER POR ID
+### ============================================================
+
+### Obtener un registro de stock por ID
+### Ajustar el ID con el resultado de una creación anterior
+GET http://localhost:3000/api/stock/ID_STOCK
+
+### Probar ID inexistente (debería fallar con 404)
+GET http://localhost:3000/api/stock/9999
+
+### Probar ID no numérico (debería fallar con 400)
+GET http://localhost:3000/api/stock/abc
+
+
+### ============================================================
+### FILTROS
+### ============================================================
+
+### Filtrar por producto
+### Debería devolver los registros del producto en ambos almacenes
+GET http://localhost:3000/api/stock?producto=ID_PRODUCTO
+
+### Filtrar por almacén
+### Debería devolver los registros de ese almacén
+GET http://localhost:3000/api/stock?almacen=ID_ALMACEN_1
+
+### Filtrar por producto y almacén
+### Debería devolver un único registro
+GET http://localhost:3000/api/stock?producto=ID_PRODUCTO&almacen=ID_ALMACEN_1
+
+### Probar producto inválido en filtro (debería fallar con 400)
+GET http://localhost:3000/api/stock?producto=abc
+
+### Probar almacén inválido en filtro (debería fallar con 400)
+GET http://localhost:3000/api/stock?almacen=abc
+
+
+### ============================================================
+### ACTUALIZAR
+### ============================================================
+
+### Actualizar cantidad del primer registro
+### Ajustar ID_STOCK
+PUT http://localhost:3000/api/stock/ID_STOCK
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 25
+}
+
+### Verificar que se actualizó
+GET http://localhost:3000/api/stock/ID_STOCK
+
+### Actualizar cantidad a 0 (debería ser válido)
+PUT http://localhost:3000/api/stock/ID_STOCK
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 0
+}
+
+### Probar actualización de ID inexistente (debería fallar con 404)
+PUT http://localhost:3000/api/stock/9999
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 10
+}
+
+### Probar actualización con producto inexistente (debería fallar con 409)
+PUT http://localhost:3000/api/stock/ID_STOCK
+Content-Type: application/json
+
+{
+  "productoId": 9999,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 10
+}
+
+### Probar actualización con cantidad negativa (debería fallar con 400)
+PUT http://localhost:3000/api/stock/ID_STOCK
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": -5
+}
+
+
+### ============================================================
+### ELIMINAR
+### ============================================================
+
+### Eliminar el segundo registro de stock
+### Ajustar ID_STOCK_2
+DELETE http://localhost:3000/api/stock/ID_STOCK_2
+
+### Verificar que fue eliminado (debería fallar con 404)
+GET http://localhost:3000/api/stock/ID_STOCK_2
+
+### Probar eliminar ID inexistente (debería fallar con 404)
+DELETE http://localhost:3000/api/stock/9999
+
+### Probar eliminar el almacén que todavía tiene stock asociado
+### Debe fallar con 409 por la restricción de integridad
+### Ajustar ID_ALMACEN_1
+DELETE http://localhost:3000/api/almacenes/ID_ALMACEN_1
