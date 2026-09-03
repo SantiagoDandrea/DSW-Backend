@@ -119,7 +119,7 @@ Content-Type: application/json
   "cantidad": 20
 }
 
-### Probar producto inexistente (debería fallar con 409)
+### Probar producto inexistente (debería fallar con 404)
 POST http://localhost:3000/api/stock
 Content-Type: application/json
 
@@ -129,7 +129,7 @@ Content-Type: application/json
   "cantidad": 10
 }
 
-### Probar almacén inexistente (debería fallar con 409)
+### Probar almacén inexistente (debería fallar con 404)
 POST http://localhost:3000/api/stock
 Content-Type: application/json
 
@@ -191,21 +191,21 @@ GET http://localhost:3000/api/stock/abc
 
 ### Filtrar por producto
 ### Debería devolver los registros del producto en ambos almacenes
-GET http://localhost:3000/api/stock?producto=ID_PRODUCTO
+GET http://localhost:3000/api/stock?productoId=ID_PRODUCTO
 
 ### Filtrar por almacén
 ### Debería devolver los registros de ese almacén
-GET http://localhost:3000/api/stock?almacen=ID_ALMACEN_1
+GET http://localhost:3000/api/stock?almacenId=ID_ALMACEN_1
 
 ### Filtrar por producto y almacén
 ### Debería devolver un único registro
-GET http://localhost:3000/api/stock?producto=ID_PRODUCTO&almacen=ID_ALMACEN_1
+GET http://localhost:3000/api/stock?productoId=ID_PRODUCTO&almacenId=ID_ALMACEN_1
 
 ### Probar producto inválido en filtro (debería fallar con 400)
-GET http://localhost:3000/api/stock?producto=abc
+GET http://localhost:3000/api/stock?productoId=abc
 
 ### Probar almacén inválido en filtro (debería fallar con 400)
-GET http://localhost:3000/api/stock?almacen=abc
+GET http://localhost:3000/api/stock?almacenId=abc
 
 
 ### ============================================================
@@ -246,7 +246,7 @@ Content-Type: application/json
   "cantidad": 10
 }
 
-### Probar actualización con producto inexistente (debería fallar con 409)
+### Probar actualización con producto inexistente (debería fallar con 404)
 PUT http://localhost:3000/api/stock/ID_STOCK
 Content-Type: application/json
 

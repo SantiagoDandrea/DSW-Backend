@@ -1,6 +1,5 @@
 import { ValidationError } from "../../errors/ValidationError.js";
-
-const VALOR_MAXIMO = 99999999.99;
+import { validarMontoMonetario } from "../../utils/validation.utils.js";
 
 function validarId(valor, nombreCampo) {
   const id = Number(valor);
@@ -15,32 +14,7 @@ function validarId(valor, nombreCampo) {
 }
 
 function validarValor(valor) {
-  if (
-    (typeof valor !== "number" && typeof valor !== "string") ||
-    (typeof valor === "string" && valor.trim().length === 0)
-  ) {
-    throw new ValidationError(
-      "El valor debe ser un importe monetario válido mayor o igual a 0."
-    );
-  }
-
-  const valorNormalizado = String(valor).trim();
-
-  if (!/^\d+(\.\d{1,2})?$/.test(valorNormalizado)) {
-    throw new ValidationError(
-      "El valor debe ser un importe monetario válido con hasta dos decimales."
-    );
-  }
-
-  const importe = Number(valorNormalizado);
-
-  if (!Number.isFinite(importe) || importe < 0 || importe > VALOR_MAXIMO) {
-    throw new ValidationError(
-      "El valor debe ser un importe monetario entre 0 y 99999999.99."
-    );
-  }
-
-  return importe;
+  return validarMontoMonetario(valor, "El valor", { permitirCero: true });
 }
 
 function validarFecha(valor, nombreCampo = "fechaDesde") {

@@ -77,17 +77,17 @@ export function validateFiltrosStock(req, res, next) {
   try {
     const filtros = {};
 
-    if (req.query.producto !== undefined) {
+    if (req.query.productoId !== undefined) {
       filtros.productoId = validarIdReferencia(
-        req.query.producto,
-        "producto"
+        req.query.productoId,
+        "productoId"
       );
     }
 
-    if (req.query.almacen !== undefined) {
+    if (req.query.almacenId !== undefined) {
       filtros.almacenId = validarIdReferencia(
-        req.query.almacen,
-        "almacen"
+        req.query.almacenId,
+        "almacenId"
       );
     }
 
