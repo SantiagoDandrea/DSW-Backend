@@ -139,15 +139,54 @@ Elimina un producto. Falla con 409 si tiene stock o pedidos asociados.
 
 ---
 
-## Historial de precios
+## Precios
+
+Un producto puede tener múltiples precios y se conserva todo el historial. La combinación `productoId + fechaDesde` es única, por lo que no puede haber dos precios del mismo producto con la misma fecha de vigencia. El precio vigente se determina tomando el precio con la `fechaDesde` más reciente que corresponda.
+
+### GET /precios
+
+Obtiene todos los precios registrados.
+
+Filtros (query params, todos opcionales):
+
+- productoId
+- fechaDesde
+- fechaHasta
+
+### GET /precios/:id
+
+Obtiene un precio.
+
+### POST /precios
+
+Crea un precio para un producto.
+
+Body:
+
+```json
+{
+  "productoId": 1,
+  "valor": 199.99,
+  "fechaDesde": "2026-09-02T00:00:00.000Z"
+}
+```
+
+productoId debe corresponder a un producto existente.
+
+No puede existir más de un precio para el mismo producto con la misma fechaDesde.
+
+### PUT /precios/:id
+
+Actualiza un precio.
+
+### DELETE /precios/:id
+
+Elimina un precio.
 
 ### GET /productos/:id/precios
 
-Obtiene todos los precios del producto, más reciente primero.
+Obtiene el historial de precios del producto, ordenado por fechaDesde de forma descendente.
 
-### POST /productos/:id/precios
-
-Agrega un nuevo precio (`{ "valor": number }`). El precio anterior queda como histórico — no se borra, simplemente deja de ser el vigente (el vigente es el de `fechaDesde` más reciente).
 
 ---
 

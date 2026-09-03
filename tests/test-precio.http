@@ -1,0 +1,343 @@
+### ============================================================
+### DATOS DE APOYO
+### Crear categoría, marca y proveedor para crear un producto
+### de prueba al que asociar los precios.
+### Ajustar los IDs según las respuestas.
+### ============================================================
+
+### Crear categoría de apoyo
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Precio - Tecnología"
+}
+
+### Crear marca de apoyo
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "Precio - Marca"
+}
+
+### Crear proveedor de apoyo
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Precio - Proveedor",
+  "cuit": "20-88776655-4",
+  "telefono": "3415550001"
+}
+
+### Crear producto de apoyo
+### Ajustar categoriaId, marcaId y proveedorId
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Producto de prueba Precio",
+  "descripcion": "Producto creado para probar el CRUD de Precio",
+  "categoriaId": ID_CATEGORIA,
+  "marcaId": ID_MARCA,
+  "proveedorId": ID_PROVEEDOR,
+  "precio": 100000
+}
+
+
+### ============================================================
+### LISTADO
+### ============================================================
+
+### Obtener todos los precios
+GET http://localhost:3000/api/precios
+
+
+### ============================================================
+### CREAR PRECIO
+### ============================================================
+
+### Crear precio válido
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 100000,
+  "fechaDesde": "2026-01-01T00:00:00.000Z"
+}
+
+### Crear segundo precio histórico
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 120000,
+  "fechaDesde": "2026-03-01T00:00:00.000Z"
+}
+
+### Crear tercer precio histórico
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 150000,
+  "fechaDesde": "2026-06-01T00:00:00.000Z"
+}
+
+### Crear precio con valor 0
+### Debería ser válido
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 0,
+  "fechaDesde": "2025-12-01T00:00:00.000Z"
+}
+
+### Probar precio duplicado
+### Misma combinación productoId + fechaDesde
+### Debería fallar con 409
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 99999,
+  "fechaDesde": "2026-01-01T00:00:00.000Z"
+}
+
+### Probar producto inexistente
+### Debería fallar con 404
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": 9999,
+  "valor": 100000,
+  "fechaDesde": "2026-07-01T00:00:00.000Z"
+}
+
+
+### ============================================================
+### VALIDACIONES DE PRECIO
+### ============================================================
+
+### Valor negativo
+### Debería fallar con 400
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": -100,
+  "fechaDesde": "2026-07-01T00:00:00.000Z"
+}
+
+### Más de dos decimales
+### Debería fallar con 400
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 100.123,
+  "fechaDesde": "2026-07-01T00:00:00.000Z"
+}
+
+### Formato monetario inválido
+### Debería fallar con 400
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": "100,50",
+  "fechaDesde": "2026-07-01T00:00:00.000Z"
+}
+
+### Valor vacío
+### Debería fallar con 400
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": "",
+  "fechaDesde": "2026-07-01T00:00:00.000Z"
+}
+
+### Fecha inválida
+### Debería fallar con 400
+POST http://localhost:3000/api/precios
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 100000,
+  "fechaDesde": "fecha-invalida"
+}
+
+
+### ============================================================
+### OBTENER POR ID
+### ============================================================
+
+### Obtener un precio por ID
+### Ajustar ID_PRECIO
+GET http://localhost:3000/api/precios/ID_PRECIO
+
+### Precio inexistente
+### Debería fallar con 404
+GET http://localhost:3000/api/precios/9999
+
+### ID inválido
+### Debería fallar con 400
+GET http://localhost:3000/api/precios/abc
+
+
+### ============================================================
+### FILTROS
+### ============================================================
+
+### Filtrar por producto
+### Debería devolver los precios del producto
+GET http://localhost:3000/api/precios?productoId=ID_PRODUCTO
+
+### Filtrar por fechaDesde
+### Debería devolver precios desde esa fecha
+GET http://localhost:3000/api/precios?fechaDesde=2026-03-01T00:00:00.000Z
+
+### Filtrar por fechaHasta
+GET http://localhost:3000/api/precios?fechaHasta=2026-03-01T00:00:00.000Z
+
+### Filtrar por rango de fechas
+GET http://localhost:3000/api/precios?fechaDesde=2026-01-01T00:00:00.000Z&fechaHasta=2026-06-01T00:00:00.000Z
+
+### Filtrar por producto y rango de fechas
+GET http://localhost:3000/api/precios?productoId=ID_PRODUCTO&fechaDesde=2026-01-01T00:00:00.000Z&fechaHasta=2026-06-01T00:00:00.000Z
+
+### FechaDesde posterior a fechaHasta
+### Debería fallar con 400
+GET http://localhost:3000/api/precios?fechaDesde=2026-06-01T00:00:00.000Z&fechaHasta=2026-01-01T00:00:00.000Z
+
+### Producto inválido en filtro
+### Debería fallar con 400
+GET http://localhost:3000/api/precios?productoId=abc
+
+### Fecha inválida en filtro
+### Debería fallar con 400
+GET http://localhost:3000/api/precios?fechaDesde=fecha-invalida
+
+
+### ============================================================
+### HISTORIAL DEL PRODUCTO
+### ============================================================
+
+### Obtener historial completo del producto
+### Debería devolver los precios ordenados por fecha descendente
+GET http://localhost:3000/api/productos/ID_PRODUCTO/precios
+
+### Producto inexistente
+### Debería fallar con 404
+GET http://localhost:3000/api/productos/9999/precios
+
+### ID de producto inválido
+### Debería fallar con 400
+GET http://localhost:3000/api/productos/abc/precios
+
+
+### ============================================================
+### ACTUALIZAR
+### ============================================================
+
+### Actualizar valor del primer precio
+### Ajustar ID_PRECIO
+PUT http://localhost:3000/api/precios/ID_PRECIO
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 110000,
+  "fechaDesde": "2026-01-01T00:00:00.000Z"
+}
+
+### Verificar actualización
+GET http://localhost:3000/api/precios/ID_PRECIO
+
+### Actualizar fechaDesde
+### Usar una fecha que no esté utilizada por otro precio
+PUT http://localhost:3000/api/precios/ID_PRECIO
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 115000,
+  "fechaDesde": "2026-02-01T00:00:00.000Z"
+}
+
+### Actualizar precio inexistente
+### Debería fallar con 404
+PUT http://localhost:3000/api/precios/9999
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 100000,
+  "fechaDesde": "2026-08-01T00:00:00.000Z"
+}
+
+### Actualizar con producto inexistente
+### Debería fallar con 404
+PUT http://localhost:3000/api/precios/ID_PRECIO
+Content-Type: application/json
+
+{
+  "productoId": 9999,
+  "valor": 100000,
+  "fechaDesde": "2026-08-01T00:00:00.000Z"
+}
+
+### Actualizar generando combinación duplicada
+### Usar ID_PRECIO_2 y la fecha de ID_PRECIO_3
+### Debería fallar con 409
+PUT http://localhost:3000/api/precios/ID_PRECIO_2
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO,
+  "valor": 130000,
+  "fechaDesde": "2026-06-01T00:00:00.000Z"
+}
+
+
+### ============================================================
+### ELIMINAR
+### ============================================================
+
+### Eliminar un precio
+### Ajustar ID_PRECIO
+DELETE http://localhost:3000/api/precios/ID_PRECIO
+
+### Verificar que fue eliminado
+### Debería fallar con 404
+GET http://localhost:3000/api/precios/ID_PRECIO
+
+### Eliminar precio inexistente
+### Debería fallar con 404
+DELETE http://localhost:3000/api/precios/9999
+
+
+### ============================================================
+### VERIFICACIÓN FINAL
+### ============================================================
+
+### Verificar listado final
+GET http://localhost:3000/api/precios
+
+### Verificar historial final
+GET http://localhost:3000/api/productos/ID_PRODUCTO/precios
