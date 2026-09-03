@@ -4,7 +4,6 @@ import {
   validateCrearProducto,
   validateActualizarProducto,
   validateIdProducto,
-  validateAgregarPrecio,
   validateAgregarImagen,
   validateIdImagen,
   validateFiltrosProductos,
@@ -13,17 +12,10 @@ import {
 const router = Router();
 
 router.get("/", validateFiltrosProductos, productoController.obtenerProductos);
-router.get("/:id/precios", validateIdProducto, productoController.obtenerHistorialPrecios);
 router.get("/:id/imagenes", validateIdProducto, productoController.obtenerImagenes);
 router.get("/:id", validateIdProducto, productoController.obtenerProductoPorId);
 
 router.post("/", validateCrearProducto, productoController.crearProducto);
-router.post(
-  "/:id/precios",
-  validateIdProducto,
-  validateAgregarPrecio,
-  productoController.agregarPrecio
-);
 router.post(
   "/:id/imagenes",
   validateIdProducto,

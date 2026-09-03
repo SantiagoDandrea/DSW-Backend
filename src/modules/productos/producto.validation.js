@@ -106,16 +106,6 @@ export function validateIdProducto(req, res, next) {
   next();
 }
 
-export function validateAgregarPrecio(req, res, next) {
-  try {
-    const valor = validarPrecioPositivo(req.body.valor, "El valor del precio");
-    req.body = { valor };
-    next();
-  } catch (err) {
-    next(err);
-  }
-}
-
 export function validateAgregarImagen(req, res, next) {
   try {
     const url = validarUrl(req.body.url);
