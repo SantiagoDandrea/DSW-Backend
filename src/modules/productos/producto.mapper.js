@@ -10,18 +10,6 @@ export function mapImagenes(imagenes) {
   return imagenes.map(mapImagen);
 }
 
-export function mapPrecio(precio) {
-  return {
-    id: precio.id,
-    valor: Number(precio.valor),
-    fechaDesde: precio.fechaDesde,
-  };
-}
-
-export function mapPrecios(precios) {
-  return precios.map(mapPrecio);
-}
-
 export function mapProducto(producto) {
   return {
     id: producto.id,

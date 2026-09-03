@@ -2,8 +2,6 @@ import { productoService } from "./producto.service.js";
 import {
   mapProducto,
   mapProductos,
-  mapPrecio,
-  mapPrecios,
   mapImagen,
   mapImagenes,
 } from "./producto.mapper.js";
@@ -32,16 +30,6 @@ export const productoController = {
   async eliminarProducto(req, res) {
     await productoService.eliminarProducto(req.params.id);
     res.status(204).send();
-  },
-
-  async agregarPrecio(req, res) {
-    const precio = await productoService.agregarPrecio(req.params.id, req.body);
-    res.status(201).json(mapPrecio(precio));
-  },
-
-  async obtenerHistorialPrecios(req, res) {
-    const precios = await productoService.obtenerHistorialPrecios(req.params.id);
-    res.json(mapPrecios(precios));
   },
 
   async agregarImagen(req, res) {

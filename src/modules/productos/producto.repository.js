@@ -87,19 +87,6 @@ export const productoRepository = {
     return prisma.producto.delete({ where: { id } });
   },
 
-  crearPrecio({ productoId, valor }) {
-    return prisma.precio.create({
-      data: { productoId, valor, fechaDesde: new Date() },
-    });
-  },
-
-  obtenerPreciosDeProducto(productoId) {
-    return prisma.precio.findMany({
-      where: { productoId },
-      orderBy: { fechaDesde: "desc" },
-    });
-  },
-
   crearImagen({ productoId, url, orden }) {
     return prisma.imagenProducto.create({
       data: { productoId, url, orden },

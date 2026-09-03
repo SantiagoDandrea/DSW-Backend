@@ -130,16 +130,6 @@ export const productoService = {
     }
   },
 
-  async agregarPrecio(productoId, { valor }) {
-    await asegurarProductoExiste(productoId);
-    return productoRepository.crearPrecio({ productoId, valor });
-  },
-
-  async obtenerHistorialPrecios(productoId) {
-    await asegurarProductoExiste(productoId);
-    return productoRepository.obtenerPreciosDeProducto(productoId);
-  },
-
   async agregarImagen(productoId, { url, orden }) {
     await asegurarProductoExiste(productoId);
     return productoRepository.crearImagen({ productoId, url, orden });

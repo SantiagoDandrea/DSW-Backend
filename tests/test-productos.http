@@ -123,41 +123,6 @@ Content-Type: application/json
   "proveedorId": ID_PROVEEDOR
 }
 
-### --- Historial de precios ---
-
-### Ver historial de precios (ajustá el id, debería tener 1 precio)
-GET http://localhost:3000/api/productos/3/precios
-
-### Agregar un nuevo precio (el anterior queda como histórico)
-POST http://localhost:3000/api/productos/3/precios
-Content-Type: application/json
-
-{
-  "valor": 1800
-}
-
-### Ver historial de nuevo (debería tener 2, el más nuevo primero)
-GET http://localhost:3000/api/productos/3/precios
-
-### Ver el producto (precioActual debería ser el nuevo valor)
-GET http://localhost:3000/api/productos/3
-
-### Probar agregar precio a producto inexistente (debería fallar con 404)
-POST http://localhost:3000/api/productos/9999/precios
-Content-Type: application/json
-
-{
-  "valor": 100
-}
-
-### Probar agregar precio inválido (debería fallar con 400)
-POST http://localhost:3000/api/productos/3/precios
-Content-Type: application/json
-
-{
-  "valor": 0
-}
-
 ### --- Imágenes ---
 
 ### Probar url inválida (debería fallar con 400)
