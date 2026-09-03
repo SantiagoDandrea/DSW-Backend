@@ -28,6 +28,7 @@ app.use("/api/productos/:id/precios", historialPrecioRouter);
 app.use("/api/productos", productosRouter);
 app.use("/api/almacenes", almacenRouter);
 app.use("/api/usuarios", usuariosRouter);
+app.use("/api/stock", stockRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
