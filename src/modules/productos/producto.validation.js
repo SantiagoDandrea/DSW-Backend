@@ -1,4 +1,5 @@
 import { ValidationError } from "../../errors/ValidationError.js";
+import { validarMontoMonetario } from "../../utils/validation.utils.js";
 
 function validarTexto(valor, nombreCampo) {
   if (typeof valor !== "string") {
@@ -25,13 +26,7 @@ function validarIdReferencia(valor, nombreCampo) {
 }
 
 function validarPrecioPositivo(valor, etiqueta) {
-  const precio = Number(valor);
-
-  if (typeof valor !== "number" || !Number.isFinite(precio) || precio <= 0) {
-    throw new ValidationError(`${etiqueta} debe ser un número mayor a 0.`);
-  }
-
-  return precio;
+  return validarMontoMonetario(valor, etiqueta, { permitirCero: false });
 }
 
 function validarOrden(orden) {

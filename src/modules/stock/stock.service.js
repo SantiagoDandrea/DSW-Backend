@@ -8,15 +8,13 @@ const MENSAJE_STOCK_DUPLICADO =
 
 function esRegistroNoEncontrado(err) {
   return (
-    err instanceof Prisma.PrismaClientKnownRequestError &&
-    err.code === "P2025"
+    err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025"
   );
 }
 
 function esRestriccionDeIntegridad(err) {
   return (
-    err instanceof Prisma.PrismaClientKnownRequestError &&
-    err.code === "P2003"
+    err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003"
   );
 }
 
@@ -43,7 +41,7 @@ export const stockService = {
     const stockExistente =
       await stockRepository.obtenerStockPorProductoYAlmacen(
         productoId,
-        almacenId
+        almacenId,
       );
 
     if (stockExistente) {
@@ -58,8 +56,8 @@ export const stockService = {
       });
     } catch (err) {
       if (esRestriccionDeIntegridad(err)) {
-        throw new ConflictError(
-          "El producto o el almacén especificado no existe."
+        throw new NotFoundError(
+          "El producto o el almacén especificado no existe.",
         );
       }
 
@@ -80,8 +78,8 @@ export const stockService = {
       }
 
       if (esRestriccionDeIntegridad(err)) {
-        throw new ConflictError(
-          "El producto o el almacén especificado no existe."
+        throw new NotFoundError(
+          "El producto o el almacén especificado no existe.",
         );
       }
 

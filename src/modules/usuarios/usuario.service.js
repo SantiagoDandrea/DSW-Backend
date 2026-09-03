@@ -7,6 +7,7 @@ import { ConflictError } from "../../errors/ConflictError.js";
 
 const SALT_ROUNDS = 10;
 
+const MENSAJE_DNI_DUPLICADO = "Ya existe un usuario con ese DNI.";
 const MENSAJE_EMAIL_DUPLICADO = "Ya existe un usuario con ese email.";
 const MENSAJE_REGISTROS_ASOCIADOS =
   "No se puede eliminar este usuario porque tiene pedidos asociados. Reasigná o eliminá esos registros primero.";
@@ -22,8 +23,17 @@ function esRestriccionDeEliminacion(err) {
   );
 }
 
-function esEmailDuplicado(err) {
-  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+function manejarErrorDuplicado(err) {
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    const target = String(err.meta?.target || "").toLowerCase();
+    if (target.includes("dni") || target.includes("primary")) {
+      throw new ConflictError(MENSAJE_DNI_DUPLICADO);
+    }
+    if (target.includes("email")) {
+      throw new ConflictError(MENSAJE_EMAIL_DUPLICADO);
+    }
+    throw new ConflictError("Ya existe un usuario con ese DNI o email.");
+  }
 }
 
 function mensajeNoExiste(dni) {
@@ -56,9 +66,7 @@ export const usuarioService = {
         localidadId,
       });
     } catch (err) {
-      if (esEmailDuplicado(err)) {
-        throw new ConflictError(MENSAJE_EMAIL_DUPLICADO);
-      }
+      manejarErrorDuplicado(err);
       throw err;
     }
   },
@@ -89,9 +97,7 @@ export const usuarioService = {
     try {
       return await usuarioRepository.actualizarUsuario(dni, datos);
     } catch (err) {
-      if (esEmailDuplicado(err)) {
-        throw new ConflictError(MENSAJE_EMAIL_DUPLICADO);
-      }
+      manejarErrorDuplicado(err);
       if (esRegistroNoEncontrado(err)) {
         throw new NotFoundError(mensajeNoExiste(dni));
       }

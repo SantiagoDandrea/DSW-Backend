@@ -1,17 +1,24 @@
 import { prisma } from "../../config/database.js";
 
-const PRODUCTO_INCLUDE = {
-  categoria: true,
-  marca: true,
-  proveedor: true,
-  precios: {
-    orderBy: { fechaDesde: "desc" },
-    take: 1,
-  },
-  imagenes: {
-    orderBy: [{ orden: "asc" }, { id: "asc" }],
-  },
-};
+function obtenerProductoInclude() {
+  return {
+    categoria: true,
+    marca: true,
+    proveedor: true,
+    precios: {
+      where: {
+        fechaDesde: {
+          lte: new Date(),
+        },
+      },
+      orderBy: { fechaDesde: "desc" },
+      take: 1,
+    },
+    imagenes: {
+      orderBy: [{ orden: "asc" }, { id: "asc" }],
+    },
+  };
+}
 
 function construirWhere({ categoriaId, marcaId, nombre }) {
   const where = {};
@@ -48,7 +55,7 @@ export const productoRepository = {
 
       return tx.producto.findUnique({
         where: { id: producto.id },
-        include: PRODUCTO_INCLUDE,
+        include: obtenerProductoInclude(),
       });
     });
   },
@@ -56,7 +63,7 @@ export const productoRepository = {
   obtenerProductos(filtros) {
     return prisma.producto.findMany({
       where: construirWhere(filtros),
-      include: PRODUCTO_INCLUDE,
+      include: obtenerProductoInclude(),
       orderBy: { nombre: "asc" },
     });
   },
@@ -64,7 +71,7 @@ export const productoRepository = {
   obtenerProductoPorId(id) {
     return prisma.producto.findUnique({
       where: { id },
-      include: PRODUCTO_INCLUDE,
+      include: obtenerProductoInclude(),
     });
   },
 
@@ -79,7 +86,7 @@ export const productoRepository = {
     return prisma.producto.update({
       where: { id },
       data,
-      include: PRODUCTO_INCLUDE,
+      include: obtenerProductoInclude(),
     });
   },
 
