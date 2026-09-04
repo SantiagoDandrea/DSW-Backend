@@ -9,13 +9,41 @@
 # Auth
 
 ## POST /auth/login
-Inicia sesión.
+
+Inicia sesión y devuelve un JWT válido por 24hs.
+
+Body:
+
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+Respuesta (200):
+
+```json
+{
+  "token": "string",
+  "usuario": { "dni": "...", "nombre": "...", "...": "mismo formato que GET /usuarios/:dni" }
+}
+```
+
+- Si el email no existe o la contraseña no coincide, responde 401 con un mensaje genérico ("Email o contraseña incorrectos.") — no distingue cuál de los dos fue el problema, por seguridad.
 
 ## POST /auth/logout
-Cierra la sesión del usuario.
+
+Cierra la sesión. Como el token es JWT (stateless), el servidor no lo invalida ni lo revoca — quien debe descartarlo es el cliente. Este endpoint no requiere estar autenticado y siempre responde 200.
 
 ## GET /auth/me
-Obtiene la información del usuario autenticado.
+
+Devuelve los datos del usuario autenticado (mismo formato que `GET /usuarios/:dni`, sin `password`).
+
+Requiere el header `Authorization: Bearer <token>` con un token válido.
+
+- Sin header, con formato inválido, o con un token vencido/con firma inválida: 401.
+- Si el usuario del token ya no existe en la base (fue eliminado después de emitirse el token): 401.
 
 ---
 

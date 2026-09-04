@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import authRouter from "./modules/auth/index.js";
 import categoriasRouter from "./modules/categorias/index.js";
 import marcasRouter from "./modules/marcas/index.js";
 import mediosPagoRouter from "./modules/medios-pago/index.js";
@@ -18,6 +19,7 @@ export const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/auth", authRouter);
 app.use("/api/categorias", categoriasRouter);
 app.use("/api/marcas", marcasRouter);
 app.use("/api/medios-pago", mediosPagoRouter);
