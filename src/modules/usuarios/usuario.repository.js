@@ -45,6 +45,13 @@ export const usuarioRepository = {
     });
   },
 
+  obtenerUsuarioPorEmail(email) {
+    return prisma.usuario.findUnique({
+      where: { email },
+      include: USUARIO_INCLUDE,
+    });
+  },
+
   actualizarUsuario(dni, data) {
     return prisma.usuario.update({
       where: { dni },

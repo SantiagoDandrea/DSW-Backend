@@ -1,0 +1,88 @@
+### Crear localidad de apoyo (anotá el id que te devuelva)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
+
+### Crear usuario de apoyo para probar el login (ajustá localidadId)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30111222",
+  "nombre": "Ana",
+  "apellido": "Perez",
+  "email": "ana@test.com",
+  "password": "Passw0rd1",
+  "telefono": "1145551234",
+  "rol": "CLIENTE",
+  "localidadId": 10
+}
+
+### --- Login ---
+
+### Login válido (guardá el token de la respuesta, lo vas a necesitar más abajo)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ana@test.com",
+  "password": "Passw0rd1"
+}
+
+### Probar password incorrecta (debería fallar con 401, mensaje genérico)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ana@test.com",
+  "password": "incorrecta"
+}
+
+### Probar email inexistente (debería fallar con 401, mismo mensaje genérico que la password incorrecta)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "noexiste@test.com",
+  "password": "loquesea"
+}
+
+### Probar sin password (debería fallar con 400)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ana@test.com"
+}
+
+### Probar email mal formado (debería fallar con 400)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "no-es-un-email",
+  "password": "Passw0rd1"
+}
+
+### --- Me ---
+
+### Obtener el usuario autenticado (ajustá el token, pegalo sin comillas después de "Bearer ")
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer TOKEN
+
+### Probar sin header Authorization (debería fallar con 401)
+GET http://localhost:3000/api/auth/me
+
+### Probar con token trucho (debería fallar con 401)
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer token.invalido.123
+
+### --- Logout ---
+
+### Logout (siempre debería responder 200, no requiere token)
+POST http://localhost:3000/api/auth/logout
