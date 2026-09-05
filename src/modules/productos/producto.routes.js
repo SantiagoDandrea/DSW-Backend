@@ -8,16 +8,30 @@ import {
   validateIdImagen,
   validateFiltrosProductos,
 } from "./producto.validation.js";
+import {
+  authMiddleware,
+  requireRole,
+} from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 
+// Rutas públicas de catálogo
 router.get("/", validateFiltrosProductos, productoController.obtenerProductos);
 router.get("/:id/imagenes", validateIdProducto, productoController.obtenerImagenes);
 router.get("/:id", validateIdProducto, productoController.obtenerProductoPorId);
 
-router.post("/", validateCrearProducto, productoController.crearProducto);
+// Operaciones administrativas restringidas a ADMIN
+router.post(
+  "/",
+  authMiddleware,
+  requireRole("ADMIN"),
+  validateCrearProducto,
+  productoController.crearProducto
+);
 router.post(
   "/:id/imagenes",
+  authMiddleware,
+  requireRole("ADMIN"),
   validateIdProducto,
   validateAgregarImagen,
   productoController.agregarImagen
@@ -25,12 +39,26 @@ router.post(
 
 router.put(
   "/:id",
+  authMiddleware,
+  requireRole("ADMIN"),
   validateIdProducto,
   validateActualizarProducto,
   productoController.actualizarProducto
 );
 
-router.delete("/imagenes/:id", validateIdImagen, productoController.eliminarImagen);
-router.delete("/:id", validateIdProducto, productoController.eliminarProducto);
+router.delete(
+  "/imagenes/:id",
+  authMiddleware,
+  requireRole("ADMIN"),
+  validateIdImagen,
+  productoController.eliminarImagen
+);
+router.delete(
+  "/:id",
+  authMiddleware,
+  requireRole("ADMIN"),
+  validateIdProducto,
+  productoController.eliminarProducto
+);
 
 export default router;

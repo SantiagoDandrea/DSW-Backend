@@ -5,18 +5,39 @@ import {
   validateActualizarLocalidad,
   validateIdLocalidad,
 } from "./localidad.validation.js";
+import {
+  authMiddleware,
+  requireRole,
+} from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 
+// Rutas públicas de consulta
 router.get("/", localidadController.obtenerLocalidades);
 router.get("/:id", validateIdLocalidad, localidadController.obtenerLocalidadPorId);
-router.post("/", validateCrearLocalidad, localidadController.crearLocalidad);
+
+// Operaciones administrativas restringidas a ADMIN
+router.post(
+  "/",
+  authMiddleware,
+  requireRole("ADMIN"),
+  validateCrearLocalidad,
+  localidadController.crearLocalidad
+);
 router.put(
   "/:id",
+  authMiddleware,
+  requireRole("ADMIN"),
   validateIdLocalidad,
   validateActualizarLocalidad,
   localidadController.actualizarLocalidad
 );
-router.delete("/:id", validateIdLocalidad, localidadController.eliminarLocalidad);
+router.delete(
+  "/:id",
+  authMiddleware,
+  requireRole("ADMIN"),
+  validateIdLocalidad,
+  localidadController.eliminarLocalidad
+);
 
 export default router;

@@ -14,8 +14,15 @@ import {
   validateIdStock,
   validateFiltrosStock,
 } from "./stock.validation.js";
+import {
+  authMiddleware,
+  requireRole,
+} from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+
+// Todas las operaciones de gestión de stock son administrativas
+router.use(authMiddleware, requireRole("ADMIN"));
 
 router.get(
   "/",

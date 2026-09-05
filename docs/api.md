@@ -49,9 +49,13 @@ Requiere el header `Authorization: Bearer <token>` con un token válido.
 
 # Usuarios
 
+Todos los endpoints de este módulo son administrativos y requieren autenticación con rol `ADMIN` (`Authorization: Bearer <token_admin>`).
+
+> Nota: Los clientes no tienen acceso a este módulo y consultan su propio perfil exclusivamente a través de `GET /auth/me`.
+
 ## GET /usuarios
 
-Listado de usuarios. Incluye la localidad resuelta (`{ id, nombre }`) de cada uno. La respuesta nunca incluye `password`.
+Listado de usuarios. Requiere rol `ADMIN`. Incluye la localidad resuelta (`{ id, nombre }`) de cada uno. La respuesta nunca incluye `password`.
 
 Filtros (query params, todos opcionales):
 
@@ -61,11 +65,11 @@ Filtros (query params, todos opcionales):
 
 ## GET /usuarios/:dni
 
-Detalle de un usuario. Incluye la localidad resuelta. Nunca incluye `password`.
+Detalle de un usuario. Requiere rol `ADMIN`. Incluye la localidad resuelta. Nunca incluye `password`.
 
 ## POST /usuarios
 
-Crea un usuario.
+Crea un usuario. Requiere rol `ADMIN`.
 
 Body:
 
@@ -89,40 +93,44 @@ Body:
 
 ## PUT /usuarios/:dni
 
-Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad). El `dni` no se puede modificar por esta vía.
+Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad). Requiere rol `ADMIN`. El `dni` no se puede modificar por esta vía.
 
 `password` es opcional: si se manda, se valida y se hashea de nuevo, reemplazando el hash guardado. Si no se manda, la contraseña actual no se toca.
 
 ## DELETE /usuarios/:dni
 
-Elimina un usuario. Falla con 409 si tiene pedidos asociados.
+Elimina un usuario. Requiere rol `ADMIN`. Falla con 409 si tiene pedidos asociados.
 
 ---
 
 # Localidades
 
+Las operaciones de consulta (`GET`) son públicas para permitir la navegación y selección de localidades. Las operaciones de modificación (`POST`, `PUT`, `DELETE`) requieren rol `ADMIN`.
+
 ## GET /localidades
-Obtiene todas las localidades.
+Obtiene todas las localidades. (Público)
 
 ## GET /localidades/:id
-Obtiene una localidad.
+Obtiene una localidad. (Público)
 
 ## POST /localidades
-Crea una localidad.
+Crea una localidad. (Requiere `ADMIN`)
 
 ## PUT /localidades/:id
-Actualiza una localidad.
+Actualiza una localidad. (Requiere `ADMIN`)
 
 ## DELETE /localidades/:id
-Elimina una localidad.
+Elimina una localidad. (Requiere `ADMIN`)
 
 ---
 
 # Productos
 
+Las operaciones de consulta (`GET`) del catálogo de productos e imágenes son públicas. Las operaciones de creación, edición y eliminación de productos e imágenes requieren rol `ADMIN`.
+
 ## GET /productos
 
-Listado de productos. Incluye categoría, marca, proveedor, precio vigente e imágenes de cada uno.
+Listado de productos. (Público). Incluye categoría, marca, proveedor, precio vigente e imágenes de cada uno.
 
 Filtros (query params, todos opcionales):
 
@@ -134,13 +142,13 @@ Filtros (query params, todos opcionales):
 
 ## GET /productos/:id
 
-Detalle del producto. Incluye categoría, marca, proveedor, precio vigente e imágenes.
+Detalle del producto. (Público). Incluye categoría, marca, proveedor, precio vigente e imágenes.
 
 Nota: `stock` y `almacenes` todavía no se incluyen — se agregan cuando se implemente ese módulo.
 
 ## POST /productos
 
-Crea un producto junto con su primer precio, en una sola operación atómica.
+Crea un producto junto con su primer precio, en una sola operación atómica. Requiere rol `ADMIN`.
 
 Body:
 
@@ -159,21 +167,23 @@ Body:
 
 ## PUT /productos/:id
 
-Actualiza los datos del producto (nombre, descripción, categoría, marca, proveedor). No modifica el precio — para eso usar el endpoint de precios.
+Actualiza los datos del producto (nombre, descripción, categoría, marca, proveedor). Requiere rol `ADMIN`. No modifica el precio — para eso usar el endpoint de precios.
 
 ## DELETE /productos/:id
 
-Elimina un producto. Falla con 409 si tiene stock o pedidos asociados.
+Elimina un producto. Requiere rol `ADMIN`. Falla con 409 si tiene stock o pedidos asociados.
 
 ---
 
 ## Precios
 
+Todos los endpoints de precios son administrativos y requieren autenticación con rol `ADMIN`.
+
 Un producto puede tener múltiples precios y se conserva todo el historial. La combinación `productoId + fechaDesde` es única, por lo que no puede haber dos precios del mismo producto con la misma fecha de vigencia. El precio vigente se determina tomando el precio con la `fechaDesde` más reciente que corresponda.
 
 ### GET /precios
 
-Obtiene todos los precios registrados.
+Obtiene todos los precios registrados. Requiere rol `ADMIN`.
 
 Filtros (query params, todos opcionales):
 
@@ -183,11 +193,11 @@ Filtros (query params, todos opcionales):
 
 ### GET /precios/:id
 
-Obtiene un precio.
+Obtiene un precio. Requiere rol `ADMIN`.
 
 ### POST /precios
 
-Crea un precio para un producto.
+Crea un precio para un producto. Requiere rol `ADMIN`.
 
 Body:
 
@@ -205,15 +215,15 @@ No puede existir más de un precio para el mismo producto con la misma fechaDesd
 
 ### PUT /precios/:id
 
-Actualiza un precio.
+Actualiza un precio. Requiere rol `ADMIN`.
 
 ### DELETE /precios/:id
 
-Elimina un precio.
+Elimina un precio. Requiere rol `ADMIN`.
 
 ### GET /productos/:id/precios
 
-Obtiene el historial de precios del producto, ordenado por fechaDesde de forma descendente.
+Obtiene el historial de precios del producto, ordenado por fechaDesde de forma descendente. Requiere rol `ADMIN`.
 
 
 ---
@@ -222,63 +232,71 @@ Obtiene el historial de precios del producto, ordenado por fechaDesde de forma d
 
 ### GET /productos/:id/imagenes
 
-Obtiene todas las imágenes del producto.
+Obtiene todas las imágenes del producto. (Público).
 
 ### POST /productos/:id/imagenes
 
-Agrega una imagen (`{ "url": string, "orden"?: number }`).
+Agrega una imagen (`{ "url": string, "orden"?: number }`). Requiere rol `ADMIN`.
 
 ### DELETE /productos/imagenes/:id
 
-Elimina una imagen por su propio id (no requiere el id del producto).
+Elimina una imagen por su propio id (no requiere el id del producto). Requiere rol `ADMIN`.
 
 ---
 
 # Categorías
 
-## GET /categorias
+Las operaciones de consulta son públicas. Las operaciones de escritura requieren rol `ADMIN`.
 
-## GET /categorias/:id
+## GET /categorias (Público)
 
-## POST /categorias
+## GET /categorias/:id (Público)
 
-## PUT /categorias/:id
+## POST /categorias (Requiere `ADMIN`)
 
-## DELETE /categorias/:id
+## PUT /categorias/:id (Requiere `ADMIN`)
+
+## DELETE /categorias/:id (Requiere `ADMIN`)
 
 ---
 
 # Marcas
 
-## GET /marcas
+Las operaciones de consulta son públicas. Las operaciones de escritura requieren rol `ADMIN`.
 
-## GET /marcas/:id
+## GET /marcas (Público)
 
-## POST /marcas
+## GET /marcas/:id (Público)
 
-## PUT /marcas/:id
+## POST /marcas (Requiere `ADMIN`)
 
-## DELETE /marcas/:id
+## PUT /marcas/:id (Requiere `ADMIN`)
+
+## DELETE /marcas/:id (Requiere `ADMIN`)
 
 ---
 
 # Proveedores
 
-## GET /proveedores
+Todos los endpoints de este módulo son administrativos y requieren autenticación con rol `ADMIN`.
 
-## GET /proveedores/:id
+## GET /proveedores (Requiere `ADMIN`)
 
-## POST /proveedores
+## GET /proveedores/:id (Requiere `ADMIN`)
 
-## PUT /proveedores/:id
+## POST /proveedores (Requiere `ADMIN`)
 
-## DELETE /proveedores/:id
+## PUT /proveedores/:id (Requiere `ADMIN`)
+
+## DELETE /proveedores/:id (Requiere `ADMIN`)
 
 ---
 
-# Inventario
+# Inventario (Stock)
 
-## GET /stock
+Todos los endpoints de stock son administrativos y requieren autenticación con rol `ADMIN`.
+
+## GET /stock (Requiere `ADMIN`)
 
 Consulta el stock.
 
@@ -287,19 +305,19 @@ Filtros:
 - producto
 - almacén
 
-## GET /stock/:id
+## GET /stock/:id (Requiere `ADMIN`)
 
 Detalle del registro de stock.
 
-## POST /stock
+## POST /stock (Requiere `ADMIN`)
 
 Registra stock.
 
-## PUT /stock/:id
+## PUT /stock/:id (Requiere `ADMIN`)
 
 Actualiza stock.
 
-## DELETE /stock/:id
+## DELETE /stock/:id (Requiere `ADMIN`)
 
 Elimina un registro de stock.
 
@@ -307,37 +325,41 @@ Elimina un registro de stock.
 
 # Almacenes
 
-## GET /almacenes
+Todos los endpoints de almacenes son administrativos y requieren autenticación con rol `ADMIN`.
 
-## GET /almacenes/:id
+## GET /almacenes (Requiere `ADMIN`)
 
-## POST /almacenes
+## GET /almacenes/:id (Requiere `ADMIN`)
 
-## PUT /almacenes/:id
+## POST /almacenes (Requiere `ADMIN`)
 
-## DELETE /almacenes/:id
+## PUT /almacenes/:id (Requiere `ADMIN`)
+
+## DELETE /almacenes/:id (Requiere `ADMIN`)
 
 ---
 
 # Medios de Pago
 
-## GET /medios-pago
+Las operaciones de consulta (`GET`) son públicas para que los clientes puedan seleccionar un medio de pago al realizar un pedido. Las operaciones de escritura requieren rol `ADMIN`.
+
+## GET /medios-pago (Público)
 
 Obtiene los medios de pago disponibles.
 
-## GET /medios-pago/:id
+## GET /medios-pago/:id (Público)
 
 Obtiene un medio de pago.
 
-## POST /medios-pago
+## POST /medios-pago (Requiere `ADMIN`)
 
 Crea un medio de pago.
 
-## PUT /medios-pago/:id
+## PUT /medios-pago/:id (Requiere `ADMIN`)
 
 Actualiza un medio de pago.
 
-## DELETE /medios-pago/:id
+## DELETE /medios-pago/:id (Requiere `ADMIN`)
 
 Elimina un medio de pago.
 
@@ -703,20 +725,41 @@ Respuesta (200):
 
 ---
 
-# Roles
+# Roles y Autorizaciones
 
-Cliente
+El sistema implementa control de acceso basado en roles (`RBAC`) con dos roles definidos: `ADMIN` y `CLIENTE`.
 
-Puede:
+## Mecanismos de Seguridad
 
-- consultar productos
-- realizar pedidos (con o sin entrega a domicilio)
-- consultar sus pedidos y el detalle de sus pedidos
-- consultar sus envíos
-- cancelar sus propios pedidos (cuando su estado lo permite)
-- cancelar el envío de sus pedidos para retiro en sucursal (cuando su estado lo permite)
-- consultar su perfil
+- **Autenticación (`authMiddleware`)**:
+  - Valida el token JWT enviado en el header `Authorization: Bearer <token>`.
+  - Si no se provee el header o el formato es incorrecto: `401 Unauthorized` ("Token no provisto.").
+  - Si el token está vencido o tiene firma inválida: `401 Unauthorized` ("Token inválido o vencido.").
+- **Autorización por Rol (`requireRole`)**:
+  - Verifica si el usuario autenticado posee uno de los roles permitidos para la operación.
+  - Si el rol no cuenta con permisos suficientes: `403 Forbidden` ("No tienes permisos para realizar esta acción.").
+- **Autorización por Propiedad del Recurso (Rol ≠ Propiedad)**:
+  - En recursos asociados a clientes (`pedidos` y `envíos`), tener el rol `CLIENTE` no otorga acceso indiscriminado:
+    - `CLIENTE` solo puede consultar, modificar o cancelar **sus propios** pedidos y envíos.
+    - Intentar acceder al detalle o cancelar un pedido/envío ajeno devuelve `403 Forbidden`.
+    - Al listar pedidos o envíos, los resultados para un `CLIENTE` se filtran automáticamente a su propio DNI.
+    - `ADMIN` puede consultar y gestionar los pedidos y envíos de **cualquier cliente**.
 
-Administrador
+---
 
-Puede acceder a todos los endpoints y realizar todas las operaciones administrativas.
+## Matriz de Acceso por Módulo
+
+| Módulo / Recurso | Operaciones Lectura (GET) | Operaciones Escritura (POST, PUT, DELETE, PATCH) |
+|---|---|---|
+| **Catálogo** (`/productos`, `/categorias`, `/marcas`) | **Público** (Visitantes, CLIENTE, ADMIN) | Solo **ADMIN** |
+| **Localidades** (`/localidades`) | **Público** | Solo **ADMIN** |
+| **Medios de Pago** (`/medios-pago`) | **Público** | Solo **ADMIN** |
+| **Usuarios** (`/usuarios`) | Solo **ADMIN** | Solo **ADMIN** |
+| **Proveedores** (`/proveedores`) | Solo **ADMIN** | Solo **ADMIN** |
+| **Stock / Inventario** (`/stock`) | Solo **ADMIN** | Solo **ADMIN** |
+| **Almacenes** (`/almacenes`) | Solo **ADMIN** | Solo **ADMIN** |
+| **Precios** (`/precios`, `/productos/:id/precios`) | Solo **ADMIN** | Solo **ADMIN** |
+| **Auth** (`/auth/login`, `/auth/logout`) | **Público** | **Público** |
+| **Perfil Propio** (`/auth/me`) | **CLIENTE** y **ADMIN** | N/A |
+| **Pedidos** (`/pedidos`) | **CLIENTE** (solo propios) / **ADMIN** (todos) | `POST`: CLIENTE (a su nombre) / ADMIN<br>`PATCH /:id/estado`: Solo **ADMIN**<br>`POST /:id/cancelar`: CLIENTE (solo propios) / ADMIN<br>`PUT /:id`, `DELETE /:id`: Solo **ADMIN** |
+| **Envíos** (`/envios`) | **CLIENTE** (solo propios) / **ADMIN** (todos) | `PUT /:id`: CLIENTE (solo propios PENDIENTES) / ADMIN<br>`POST /:id/cancelar`: CLIENTE (solo propios cancelables) / ADMIN |

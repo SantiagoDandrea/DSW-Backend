@@ -207,6 +207,21 @@ Authorization: Bearer TOKEN_ADMIN
 POST http://localhost:3000/api/envios/ID_ENVIO_CLIENTE_LP/cancelar
 Authorization: Bearer TOKEN_CLIENTE_ROSARIO
 
+### Caso 23: Verificar que un cliente no pueda consultar el detalle del envío de otro cliente
+### Debe fallar con 403 Forbidden
+GET http://localhost:3000/api/envios/ID_ENVIO_CLIENTE_LP
+Authorization: Bearer TOKEN_CLIENTE_ROSARIO
+
+### Caso 24: Verificar que un cliente no pueda modificar el domicilio del envío de otro cliente
+### Debe fallar con 403 Forbidden
+PUT http://localhost:3000/api/envios/ID_ENVIO_CLIENTE_LP
+Authorization: Bearer TOKEN_CLIENTE_ROSARIO
+Content-Type: application/json
+
+{
+  "domicilioEntrega": "Dirección No Autorizada"
+}
+
 
 ### ============================================================
 ### 4. CONSULTAS Y ACTUALIZACIÓN DE ENVÍOS

@@ -7,8 +7,15 @@ import {
   validateIdProductoPrecio,
   validateFiltrosPrecio,
 } from "./precio.validation.js";
+import {
+  authMiddleware,
+  requireRole,
+} from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+
+// Todas las operaciones de gestión de precios son administrativas
+router.use(authMiddleware, requireRole("ADMIN"));
 
 router.get("/", validateFiltrosPrecio, precioController.obtenerPrecios);
 router.get(
@@ -30,6 +37,9 @@ router.delete(
 );
 
 export const historialPrecioRouter = Router({ mergeParams: true });
+
+// El historial de precios es una consulta administrativa
+historialPrecioRouter.use(authMiddleware, requireRole("ADMIN"));
 
 historialPrecioRouter.get(
   "/",

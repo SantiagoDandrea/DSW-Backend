@@ -6,8 +6,15 @@ import {
   validateDniUsuario,
   validateFiltrosUsuarios,
 } from "./usuario.validation.js";
+import {
+  authMiddleware,
+  requireRole,
+} from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+
+// Todas las operaciones de gestión de usuarios son administrativas
+router.use(authMiddleware, requireRole("ADMIN"));
 
 router.get("/", validateFiltrosUsuarios, usuarioController.obtenerUsuarios);
 router.get("/:dni", validateDniUsuario, usuarioController.obtenerUsuarioPorDni);

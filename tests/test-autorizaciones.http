@@ -1,0 +1,420 @@
+### ============================================================
+### PRUEBAS DE AUTORIZACIÓN Y CONTROL DE ACCESO POR ROL
+### (tests/test-autorizaciones.http)
+### ============================================================
+
+### ============================================================
+### 0. AUTENTICACIÓN: Obtención de Tokens JWT
+### ============================================================
+
+### 0.1 Login Administrador (Guardar TOKEN_ADMIN)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "Password123"
+}
+
+### 0.2 Login Cliente 1 (Guardar TOKEN_CLIENTE_1)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente.lp@test.com",
+  "password": "Password123"
+}
+
+### 0.3 Login Cliente 2 (Guardar TOKEN_CLIENTE_2)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente.rosario@test.com",
+  "password": "Password123"
+}
+
+
+### ============================================================
+### 1. PETICIONES SIN AUTENTICACIÓN (Debe fallar con 401 Unauthorized)
+### ============================================================
+
+### 1.1 GET /auth/me sin token -> 401
+GET http://localhost:3000/api/auth/me
+
+### 1.2 GET /usuarios sin token -> 401
+GET http://localhost:3000/api/usuarios
+
+### 1.3 POST /pedidos sin token -> 401
+POST http://localhost:3000/api/pedidos
+Content-Type: application/json
+
+{
+  "productos": [{ "productoId": 1, "cantidad": 1 }],
+  "medioPagoId": 1
+}
+
+### 1.4 GET /pedidos sin token -> 401
+GET http://localhost:3000/api/pedidos
+
+### 1.5 GET /envios sin token -> 401
+GET http://localhost:3000/api/envios
+
+### 1.6 GET /stock sin token -> 401
+GET http://localhost:3000/api/stock
+
+### 1.7 POST /productos sin token -> 401
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Producto no autorizado",
+  "descripcion": "Intento sin auth",
+  "categoriaId": 1,
+  "marcaId": 1,
+  "proveedorId": 1,
+  "precio": 50000
+}
+
+### 1.8 Token inválido o mal formado -> 401
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer token_falso_invalido_123
+
+
+### ============================================================
+### 2. RUTAS PÚBLICAS (Deben responder 200 sin requerir token)
+### ============================================================
+
+### 2.1 GET /productos -> 200 (Catálogo público)
+GET http://localhost:3000/api/productos
+
+### 2.2 GET /categorias -> 200 (Categorías públicas)
+GET http://localhost:3000/api/categorias
+
+### 2.3 GET /marcas -> 200 (Marcas públicas)
+GET http://localhost:3000/api/marcas
+
+### 2.4 GET /medios-pago -> 200 (Medios de pago públicos)
+GET http://localhost:3000/api/medios-pago
+
+### 2.5 GET /localidades -> 200 (Localidades públicas)
+GET http://localhost:3000/api/localidades
+
+
+### ============================================================
+### 3. CLIENTE: RESTRICCIÓN DE OPERACIONES ADMINISTRATIVAS
+### (Debe fallar con 403 Forbidden)
+### ============================================================
+
+### 3.1 CLIENTE intenta listar usuarios -> 403 Forbidden
+GET http://localhost:3000/api/usuarios
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 3.2 CLIENTE intenta consultar un usuario por DNI -> 403 Forbidden
+GET http://localhost:3000/api/usuarios/30111222
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 3.3 CLIENTE intenta crear un usuario -> 403 Forbidden
+POST http://localhost:3000/api/usuarios
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "dni": "99888777",
+  "nombre": "Intruso",
+  "apellido": "Hacker",
+  "email": "intruso@test.com",
+  "password": "Password123",
+  "telefono": "1199998888",
+  "rol": "ADMIN",
+  "localidadId": 1
+}
+
+### 3.4 CLIENTE intenta crear un producto -> 403 Forbidden
+POST http://localhost:3000/api/productos
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "nombre": "Producto ilegal",
+  "descripcion": "No permitido",
+  "categoriaId": 1,
+  "marcaId": 1,
+  "proveedorId": 1,
+  "precio": 9999
+}
+
+### 3.5 CLIENTE intenta modificar un producto -> 403 Forbidden
+PUT http://localhost:3000/api/productos/1
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "nombre": "Producto modificado sin permiso",
+  "descripcion": "Modificación no autorizada",
+  "categoriaId": 1,
+  "marcaId": 1,
+  "proveedorId": 1
+}
+
+### 3.6 CLIENTE intenta eliminar un producto -> 403 Forbidden
+DELETE http://localhost:3000/api/productos/1
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 3.7 CLIENTE intenta crear una categoría -> 403 Forbidden
+POST http://localhost:3000/api/categorias
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "nombre": "Categoría no autorizada"
+}
+
+### 3.8 CLIENTE intenta crear una marca -> 403 Forbidden
+POST http://localhost:3000/api/marcas
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "nombre": "Marca no autorizada"
+}
+
+### 3.9 CLIENTE intenta consultar proveedores -> 403 Forbidden
+GET http://localhost:3000/api/proveedores
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 3.10 CLIENTE intenta crear un proveedor -> 403 Forbidden
+POST http://localhost:3000/api/proveedores
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "nombre": "Proveedor clandestino",
+  "cuit": "20-99999999-9",
+  "telefono": "1100000000"
+}
+
+### 3.11 CLIENTE intenta consultar stock -> 403 Forbidden
+GET http://localhost:3000/api/stock
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 3.12 CLIENTE intenta registrar stock -> 403 Forbidden
+POST http://localhost:3000/api/stock
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "almacenId": 1,
+  "cantidad": 50
+}
+
+### 3.13 CLIENTE intenta consultar almacenes -> 403 Forbidden
+GET http://localhost:3000/api/almacenes
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 3.14 CLIENTE intenta crear un almacén -> 403 Forbidden
+POST http://localhost:3000/api/almacenes
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "descripcion": "Almacén no autorizado",
+  "direccion": "Calle Falsa 123"
+}
+
+### 3.15 CLIENTE intenta consultar la lista de precios -> 403 Forbidden
+GET http://localhost:3000/api/precios
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 3.16 CLIENTE intenta crear un precio -> 403 Forbidden
+POST http://localhost:3000/api/precios
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "valor": 10,
+  "fechaDesde": "2026-09-01T00:00:00.000Z"
+}
+
+### 3.17 CLIENTE intenta consultar historial de precios -> 403 Forbidden
+GET http://localhost:3000/api/productos/1/precios
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 3.18 CLIENTE intenta crear un medio de pago -> 403 Forbidden
+POST http://localhost:3000/api/medios-pago
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "descripcion": "Medio pago no autorizado"
+}
+
+### 3.19 CLIENTE intenta crear una localidad -> 403 Forbidden
+POST http://localhost:3000/api/localidades
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "nombre": "Pueblo No Autorizado",
+  "codigoPostal": "9999",
+  "provincia": "Santa Fe"
+}
+
+### 3.20 CLIENTE intenta cambiar el estado de un pedido -> 403 Forbidden
+PATCH http://localhost:3000/api/pedidos/1/estado
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "estado": "CONFIRMADO"
+}
+
+
+### ============================================================
+### 4. CLIENTE: OPERACIONES PERMITIDAS SOBRE RECURSOS PROPIOS
+### ============================================================
+
+### 4.1 Consultar su propio perfil -> 200 OK
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 4.2 Crear un pedido a su propio nombre -> 201 Created
+### (Si envía usuarioDni de otro, el backend lo ignora y usa su propia identidad del JWT)
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "productos": [
+    { "productoId": 1, "cantidad": 1 }
+  ],
+  "medioPagoId": 1,
+  "envio": {
+    "requiereEnvio": true,
+    "domicilioEntrega": "Av. San Martín 500"
+  }
+}
+
+### 4.3 Consultar sus propios pedidos -> 200 OK (Solo lista pedidos del cliente autenticado)
+GET http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 4.4 Consultar el detalle de su propio pedido -> 200 OK
+GET http://localhost:3000/api/pedidos/ID_PEDIDO_PROPIO
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 4.5 Consultar sus propios envíos -> 200 OK (Solo lista envíos de sus pedidos)
+GET http://localhost:3000/api/envios
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 4.6 Consultar el detalle de su propio envío -> 200 OK
+GET http://localhost:3000/api/envios/ID_ENVIO_PROPIO
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 4.7 Actualizar domicilio de su propio envío (en estado PENDIENTE) -> 200 OK
+PUT http://localhost:3000/api/envios/ID_ENVIO_PROPIO
+Authorization: Bearer TOKEN_CLIENTE_1
+Content-Type: application/json
+
+{
+  "domicilioEntrega": "Calle 15 Nro 850, Las Parejas"
+}
+
+### 4.8 Cancelar el flete de su propio envío (para retiro en sucursal) -> 200 OK
+POST http://localhost:3000/api/envios/ID_ENVIO_PROPIO/cancelar
+Authorization: Bearer TOKEN_CLIENTE_1
+
+### 4.9 Cancelar su propio pedido (en estado PENDIENTE) -> 200 OK
+POST http://localhost:3000/api/pedidos/ID_PEDIDO_PROPIO/cancelar
+Authorization: Bearer TOKEN_CLIENTE_1
+
+
+### ============================================================
+### 5. AISLAMIENTO ENTRE CLIENTES (Rol ≠ Propiedad del Recurso)
+### (Debe fallar con 403 Forbidden cuando Cliente 2 intenta operar sobre Cliente 1)
+### ============================================================
+
+### 5.1 Cliente 2 intenta consultar el pedido de Cliente 1 -> 403 Forbidden
+GET http://localhost:3000/api/pedidos/ID_PEDIDO_DE_CLIENTE_1
+Authorization: Bearer TOKEN_CLIENTE_2
+
+### 5.2 Cliente 2 intenta cancelar el pedido de Cliente 1 -> 403 Forbidden
+POST http://localhost:3000/api/pedidos/ID_PEDIDO_DE_CLIENTE_1/cancelar
+Authorization: Bearer TOKEN_CLIENTE_2
+
+### 5.3 Cliente 2 intenta consultar el envío de Cliente 1 -> 403 Forbidden
+GET http://localhost:3000/api/envios/ID_ENVIO_DE_CLIENTE_1
+Authorization: Bearer TOKEN_CLIENTE_2
+
+### 5.4 Cliente 2 intenta actualizar el domicilio del envío de Cliente 1 -> 403 Forbidden
+PUT http://localhost:3000/api/envios/ID_ENVIO_DE_CLIENTE_1
+Authorization: Bearer TOKEN_CLIENTE_2
+Content-Type: application/json
+
+{
+  "domicilioEntrega": "Dirección trucha de intruso"
+}
+
+### 5.5 Cliente 2 intenta cancelar el envío de Cliente 1 -> 403 Forbidden
+POST http://localhost:3000/api/envios/ID_ENVIO_DE_CLIENTE_1/cancelar
+Authorization: Bearer TOKEN_CLIENTE_2
+
+
+### ============================================================
+### 6. ADMINISTRADOR: ACCESO TOTAL Y GESTIÓN GLOBAL
+### ============================================================
+
+### 6.1 ADMIN consulta todos los usuarios -> 200 OK
+GET http://localhost:3000/api/usuarios
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.2 ADMIN consulta stock -> 200 OK
+GET http://localhost:3000/api/stock
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.3 ADMIN consulta almacenes -> 200 OK
+GET http://localhost:3000/api/almacenes
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.4 ADMIN consulta proveedores -> 200 OK
+GET http://localhost:3000/api/proveedores
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.5 ADMIN consulta precios -> 200 OK
+GET http://localhost:3000/api/precios
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.6 ADMIN consulta todos los pedidos (incluye de todos los clientes) -> 200 OK
+GET http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.7 ADMIN consulta cualquier pedido por ID -> 200 OK
+GET http://localhost:3000/api/pedidos/ID_PEDIDO_DE_CLIENTE_1
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.8 ADMIN cambia estado de un pedido -> 200 OK
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO_DE_CLIENTE_1/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "CONFIRMADO"
+}
+
+### 6.9 ADMIN consulta todos los envíos (de todos los clientes) -> 200 OK
+GET http://localhost:3000/api/envios
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.10 ADMIN consulta cualquier envío por ID -> 200 OK
+GET http://localhost:3000/api/envios/ID_ENVIO_DE_CLIENTE_1
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.11 ADMIN cancela el envío de cualquier cliente -> 200 OK
+POST http://localhost:3000/api/envios/ID_ENVIO_DE_CLIENTE_1/cancelar
+Authorization: Bearer TOKEN_ADMIN
+
+### 6.12 ADMIN cancela el pedido de cualquier cliente -> 200 OK
+POST http://localhost:3000/api/pedidos/ID_PEDIDO_DE_CLIENTE_1/cancelar
+Authorization: Bearer TOKEN_ADMIN
