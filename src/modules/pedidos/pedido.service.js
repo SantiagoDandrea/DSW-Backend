@@ -1,4 +1,5 @@
 import { pedidoRepository } from "./pedido.repository.js";
+import { envioService } from "../envios/envio.service.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
 import { ForbiddenError } from "../../errors/ForbiddenError.js";
@@ -13,10 +14,6 @@ const TRANSICIONES_PERMITIDAS = {
 };
 
 const ESTADOS_CANCELABLES = ["PENDIENTE", "CONFIRMADO", "EN_PREPARACION"];
-
-const CIUDAD_COMERCIO = "las parejas";
-const COSTO_ENVIO_LOCAL = 3000;
-const COSTO_ENVIO_NACIONAL = 15000;
 
 export const pedidoService = {
   async crearPedido({ usuarioAuth, body }) {
@@ -106,16 +103,7 @@ export const pedidoService = {
     let datosEnvio = null;
 
     if (body.envio?.requiereEnvio) {
-      const nombreLocalidad = (usuario.localidad?.nombre || "")
-        .trim()
-        .toLowerCase();
-
-      if (nombreLocalidad === CIUDAD_COMERCIO) {
-        costoEnvio = COSTO_ENVIO_LOCAL;
-      } else {
-        costoEnvio = COSTO_ENVIO_NACIONAL;
-      }
-
+      costoEnvio = envioService.calcularCosto(usuario.localidad?.nombre);
       datosEnvio = {
         domicilioEntrega: body.envio.domicilioEntrega,
       };
@@ -200,13 +188,10 @@ export const pedidoService = {
     // Mapear estado de pedido a estado de envío si posee envío
     let nuevoEstadoEnvio = null;
     if (pedido.envio) {
-      if (nuevoEstado === "EN_PREPARACION") {
-        nuevoEstadoEnvio = "EN_PREPARACION";
-      } else if (nuevoEstado === "ENVIADO") {
-        nuevoEstadoEnvio = "EN_TRANSITO";
-      } else if (nuevoEstado === "ENTREGADO") {
-        nuevoEstadoEnvio = "ENTREGADO";
-      }
+      nuevoEstadoEnvio = envioService.mapearEstadoPedidoAEnvio(
+        nuevoEstado,
+        pedido.envio.estado
+      );
     }
 
     return pedidoRepository.actualizarEstadoPedido(
@@ -271,10 +256,18 @@ export const pedidoService = {
       }
     }
 
-    if (data.domicilioEntrega !== undefined && !pedido.envio) {
-      throw new ConflictError(
-        "No se puede actualizar el domicilio de entrega de un pedido sin envío."
-      );
+    if (data.domicilioEntrega !== undefined) {
+      if (!pedido.envio) {
+        throw new ConflictError(
+          "No se puede actualizar el domicilio de entrega de un pedido sin envío."
+        );
+      }
+
+      if (pedido.envio.estado === "CANCELADO") {
+        throw new ConflictError(
+          "No se puede actualizar el domicilio de entrega de un envío cancelado."
+        );
+      }
     }
 
     return pedidoRepository.actualizarPedido(id, data);

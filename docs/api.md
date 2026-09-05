@@ -567,19 +567,139 @@ Cancela un pedido y revierte el stock descontado.
 
 Respuesta (200): Pedido cancelado.
 
----
-
 # Envíos
+
+`Envio` representa la entrega a domicilio asociada a un pedido.
+
+### Reglas generales y generación
+- **Generación**: El registro `Envio` se genera de manera automática y transaccional como parte de la creación del pedido (`POST /pedidos`) cuando se especifica `envio.requiereEnvio: true` y se proporciona `envio.domicilioEntrega`.
+- **Cuándo existe**: Si el pedido no requiere envío (retiro en local), **no** se genera ningún registro de `Envio`, el costo de envío es `$0` y el total del pedido equivale al subtotal de los productos.
+- **Cálculo del costo**: El costo pertenece exclusivamente al módulo de Envíos y se calcula automáticamente en el backend según la localidad del usuario asociado:
+  - **Las Parejas (Santa Fe)**: `$3.000`
+  - **Cualquier otra localidad (resto del país)**: `$15.000`
+  - El cliente **no** puede enviar arbitrariamente el costo del flete.
+  - El total del pedido utiliza dicho costo: `subtotal + costoEnvio = total`.
+- **Fecha tentativa**: El campo `fechaTentativa` es opcional (`null`), ya que el sistema no realiza estimaciones automáticas de tiempos ni cálculo de rutas.
+
+### Estados del Envío y sincronización con Pedido
+El ciclo de vida del envío depende directamente del estado del pedido asociado:
+- Pedido `PENDIENTE` → Envío `PENDIENTE`
+- Pedido `CONFIRMADO` → Envío `PENDIENTE`
+- Pedido `EN_PREPARACION` → Envío `PENDIENTE`
+- Pedido `ENVIADO` → Envío `EN_TRANSITO`
+- Pedido `ENTREGADO` → Envío `ENTREGADO` (registra automáticamente `fechaEntregado`)
+- Pedido `CANCELADO` → Envío `CANCELADO`
+
+### Cancelación independiente de Envío vs. Cancelación de Pedido
+- **Cancelar Pedido (`POST /pedidos/:id/cancelar`)**:
+  - Cambia el estado del pedido a `CANCELADO`.
+  - Cambia el estado del envío a `CANCELADO` (si existe).
+  - **Devuelve el stock** de los productos a los almacenes de origen de forma atómica.
+- **Cancelar Envío (`POST /envios/:id/cancelar`)**:
+  - Aplica cuando el cliente decide retirar el pedido por el local/sucursal y ya no requiere despacho a domicilio.
+  - Cambia el estado del envío a `CANCELADO`.
+  - **El pedido permanece activo** y en su estado actual (no se cancela).
+  - **Se resta el costo de envío del total del pedido** (`total = subtotal`).
+  - **NO se modifica el stock** ni los productos del pedido.
+  - Operación atómica y transaccional.
+  - Si el pedido cambia de estado posteriormente (por ejemplo, avanza en preparación), el envío **permanece `CANCELADO`** y no resucita a estados activos.
+
+---
 
 ## GET /envios
 
+Listado de envíos.
+- `ADMIN`: Consulta todos los envíos.
+- `CLIENTE`: Consulta únicamente los envíos vinculados a sus propios pedidos.
+
+Filtros (query params, opcionales):
+- `estado` (`PENDIENTE | EN_PREPARACION | EN_TRANSITO | ENTREGADO | CANCELADO`)
+- `pedidoId` (número entero positivo)
+
+Respuesta (200):
+```json
+[
+  {
+    "id": 1,
+    "pedidoId": 15,
+    "domicilioEntrega": "Av. 25 de Mayo 123",
+    "costo": 3000,
+    "fechaTentativa": null,
+    "fechaEntregado": null,
+    "estado": "PENDIENTE",
+    "pedido": {
+      "id": 15,
+      "fecha": "2026-09-05T12:00:00.000Z",
+      "estado": "PENDIENTE",
+      "total": 103000,
+      "cliente": {
+        "dni": "40111222",
+        "nombre": "Carlos",
+        "apellido": "Perez",
+        "email": "carlos@test.com"
+      }
+    }
+  }
+]
+```
+
 ## GET /envios/:id
 
-## POST /envios
+Obtiene el detalle completo de un envío por su ID.
+- `ADMIN`: Puede consultar cualquier envío.
+- `CLIENTE`: Solo puede consultar si el envío pertenece a uno de sus pedidos (403 si pertenece a otro).
+
+Respuesta (200): Mismo formato con detalle completo del pedido, cliente y artículos.
 
 ## PUT /envios/:id
 
-## DELETE /envios/:id
+Actualiza el domicilio de entrega de un envío.
+- Permitido para `ADMIN` o el `CLIENTE` dueño del pedido.
+- Solo permitido si el envío y el pedido se encuentran en estado `PENDIENTE` (409 Conflict en otros estados).
+
+Body:
+```json
+{
+  "domicilioEntrega": "Calle 22 Nro 750"
+}
+```
+
+Respuesta (200): Envío actualizado.
+
+## POST /envios/:id/cancelar
+
+Cancela la entrega a domicilio de forma independiente (ej. cambio a retiro en sucursal).
+- Permitido para `ADMIN` o el `CLIENTE` dueño del pedido.
+- Solo puede cancelarse si el envío está en estado `PENDIENTE` o `EN_PREPARACION`, y el pedido en `PENDIENTE`, `CONFIRMADO` o `EN_PREPARACION`.
+- Si el envío ya fue entregado, está en tránsito o ya fue cancelado: 409 Conflict.
+- Si el pedido está cancelado, enviado o entregado: 409 Conflict.
+- Actualiza el estado del envío a `CANCELADO` y descuenta el costo del flete del `total` del pedido.
+- No altera el stock ni el estado del pedido.
+
+Respuesta (200):
+```json
+{
+  "id": 1,
+  "pedidoId": 15,
+  "domicilioEntrega": "Av. 25 de Mayo 123",
+  "costo": 3000,
+  "fechaTentativa": null,
+  "fechaEntregado": null,
+  "estado": "CANCELADO",
+  "pedido": {
+    "id": 15,
+    "fecha": "2026-09-05T12:00:00.000Z",
+    "estado": "PENDIENTE",
+    "total": 100000,
+    "cliente": {
+      "dni": "40111222",
+      "nombre": "Carlos",
+      "apellido": "Perez",
+      "email": "carlos@test.com"
+    }
+  }
+}
+```
 
 ---
 
@@ -590,10 +710,13 @@ Cliente
 Puede:
 
 - consultar productos
-- realizar pedidos
-- consultar sus pedidos
+- realizar pedidos (con o sin entrega a domicilio)
+- consultar sus pedidos y el detalle de sus pedidos
+- consultar sus envíos
+- cancelar sus propios pedidos (cuando su estado lo permite)
+- cancelar el envío de sus pedidos para retiro en sucursal (cuando su estado lo permite)
 - consultar su perfil
 
 Administrador
 
-Puede acceder a todos los endpoints.
+Puede acceder a todos los endpoints y realizar todas las operaciones administrativas.

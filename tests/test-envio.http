@@ -1,0 +1,238 @@
+### ============================================================
+### PRUEBAS DEL MÓDULO DE ENVÍOS (tests/test-envio.http)
+### ============================================================
+
+### ============================================================
+### DATOS DE APOYO: Autenticación y Cuentas de Prueba
+### ============================================================
+
+### 1. Login de Cliente Las Parejas (Guardar TOKEN_CLIENTE_LP)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente.lp@test.com",
+  "password": "Password123"
+}
+
+### 2. Login de Cliente Rosario (Guardar TOKEN_CLIENTE_ROSARIO)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente.rosario@test.com",
+  "password": "Password123"
+}
+
+### 3. Login de Administrador (Guardar TOKEN_ADMIN)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "Password123"
+}
+
+
+### ============================================================
+### 1. CREACIÓN DE PEDIDOS Y COSTOS DE ENVÍO
+### ============================================================
+
+### Caso 1: Crear pedido sin envío (Retiro en local)
+### Verifica: No se genera Envio, costoEnvio = 0, total = subtotal (100.000)
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": false
+  }
+}
+
+### Caso 2 y 3: Crear pedido con envío dentro de Las Parejas
+### Verifica: Se genera Envio con costo = 3000, total = 100.000 + 3.000 = 103.000
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": true,
+    "domicilioEntrega": "Av. 25 de Mayo 123"
+  }
+}
+
+### Caso 4 y 5: Crear pedido con envío fuera de Las Parejas (Rosario)
+### Verifica: Se genera Envio con costo = 15000, total = 50.000 + 15.000 = 65.000
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_ROSARIO
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_2,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": true,
+    "domicilioEntrega": "Bv. Oroño 1200, Rosario"
+  }
+}
+
+### Caso 6 y 7: Verificar que el costo quede almacenado en Envio y total = subtotal + costo
+GET http://localhost:3000/api/pedidos/ID_PEDIDO
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+
+### ============================================================
+### 2. SINCRONIZACIÓN DE ESTADOS (PEDIDO → ENVÍO)
+### ============================================================
+
+### Caso 8: Pedido PENDIENTE → Envío PENDIENTE
+### Verificar estado de envío en el detalle
+GET http://localhost:3000/api/envios/ID_ENVIO
+Authorization: Bearer TOKEN_ADMIN
+
+### Caso 9: Pedido CONFIRMADO → Envío PENDIENTE
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "CONFIRMADO"
+}
+
+### Caso 10: Pedido EN_PREPARACION → Envío PENDIENTE
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "EN_PREPARACION"
+}
+
+### Caso 11: Pedido ENVIADO → Envío EN_TRANSITO (en camino)
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "ENVIADO"
+}
+
+### Caso 12: Pedido ENTREGADO → Envío ENTREGADO (registra fechaEntregado)
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "ENTREGADO"
+}
+
+### Caso 13: Cancelar Pedido completo → Envío CANCELADO y stock devuelto
+### Crear un nuevo pedido con envío y cancelarlo
+POST http://localhost:3000/api/pedidos/ID_NUEVO_PEDIDO/cancelar
+Authorization: Bearer TOKEN_ADMIN
+
+
+### ============================================================
+### 3. CANCELACIÓN INDEPENDIENTE DEL ENVÍO (POST /api/envios/:id/cancelar)
+### ============================================================
+
+### Caso 14: Crear pedido con envío para probar cancelación exclusiva de flete
+### Total inicial: 100.000 + 3.000 = 103.000
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": true,
+    "domicilioEntrega": "Calle 10 Nro 345, Las Parejas"
+  }
+}
+
+### Caso 15: Cancelar únicamente el envío (cliente decide retirar en local)
+POST http://localhost:3000/api/envios/ID_ENVIO_CREADO/cancelar
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+### Caso 16, 17 y 18: Verificar estado y total del pedido
+### Verifica:
+### - El pedido NO está cancelado (sigue en PENDIENTE).
+### - El envío está CANCELADO.
+### - El total del pedido se redujo a 100.000 (se restaron los 3.000).
+GET http://localhost:3000/api/pedidos/ID_PEDIDO_CREADO
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+### Caso 19: Verificar que el stock NO fue modificado por cancelar el envío
+GET http://localhost:3000/api/stock?productoId=ID_PRODUCTO_1
+Authorization: Bearer TOKEN_ADMIN
+
+### Caso 20: Intentar cancelar nuevamente un envío cancelado (debe fallar con 409 Conflict)
+POST http://localhost:3000/api/envios/ID_ENVIO_CREADO/cancelar
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+### Caso 21: Intentar cancelar un envío en estado no cancelable (ej. ENTREGADO o EN_TRANSITO)
+### Debe fallar con 409 Conflict
+POST http://localhost:3000/api/envios/ID_ENVIO_ENTREGADO/cancelar
+Authorization: Bearer TOKEN_ADMIN
+
+### Caso 22: Verificar que un cliente no pueda cancelar el envío de otro cliente
+### Debe fallar con 403 Forbidden
+POST http://localhost:3000/api/envios/ID_ENVIO_CLIENTE_LP/cancelar
+Authorization: Bearer TOKEN_CLIENTE_ROSARIO
+
+
+### ============================================================
+### 4. CONSULTAS Y ACTUALIZACIÓN DE ENVÍOS
+### ============================================================
+
+### Consultar todos los envíos como Administrador
+GET http://localhost:3000/api/envios
+Authorization: Bearer TOKEN_ADMIN
+
+### Consultar envíos como Cliente (solo ve los propios)
+GET http://localhost:3000/api/envios
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+### Filtrar envíos por estado
+GET http://localhost:3000/api/envios?estado=CANCELADO
+Authorization: Bearer TOKEN_ADMIN
+
+### Consultar detalle de un envío por ID
+GET http://localhost:3000/api/envios/ID_ENVIO
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+### Actualizar domicilio de entrega mientras está PENDIENTE
+PUT http://localhost:3000/api/envios/ID_ENVIO
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "domicilioEntrega": "Nueva Dirección 999, Las Parejas"
+}

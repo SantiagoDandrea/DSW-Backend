@@ -233,9 +233,17 @@ export const pedidoRepository = {
       });
 
       if (nuevoEstadoEnvio) {
+        const dataEnvio = { estado: nuevoEstadoEnvio };
+        if (nuevoEstadoEnvio === "ENTREGADO") {
+          dataEnvio.fechaEntregado = new Date();
+        }
+
         await tx.envio.updateMany({
-          where: { pedidoId: id },
-          data: { estado: nuevoEstadoEnvio },
+          where: {
+            pedidoId: id,
+            estado: { not: "CANCELADO" },
+          },
+          data: dataEnvio,
         });
       }
 
