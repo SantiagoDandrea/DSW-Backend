@@ -144,6 +144,7 @@ model Almacen {
   direccion     String
 
   stock         Stock[]
+  detalles      DetallePedido[]
 }
 
 model Stock {
@@ -197,15 +198,18 @@ model DetallePedido {
 
   pedidoId         Int
   productoId       Int
+  almacenId        Int
 
   cantidad         Int
   precioUnitario   Decimal    @db.Decimal(10,2)
 
   pedido           Pedido     @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
-  producto         Producto  @relation(fields: [productoId], references: [id], onDelete: Restrict)
+  producto         Producto   @relation(fields: [productoId], references: [id], onDelete: Restrict)
+  almacen          Almacen    @relation(fields: [almacenId], references: [id], onDelete: Restrict)
 
   @@index([pedidoId])
   @@index([productoId])
+  @@index([almacenId])
 }
 
 model Envio {
@@ -216,10 +220,10 @@ model Envio {
   domicilioEntrega    String
   costo               Decimal         @db.Decimal(10,2)
 
-  fechaTentativa      DateTime
+  fechaTentativa      DateTime?
   fechaEntregado      DateTime?
 
-  estado              EstadoEnvio
+  estado              EstadoEnvio     @default(PENDIENTE)
 
   pedido              Pedido          @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
 
