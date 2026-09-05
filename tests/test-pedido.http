@@ -1,0 +1,534 @@
+### ============================================================
+### DATOS DE APOYO
+### Autenticación, Usuarios, Localidades, Medios de Pago,
+### Almacenes, Productos y Stock en ambos almacenes.
+### ============================================================
+
+### 1. Crear Localidad 1 (Las Parejas)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Las Parejas",
+  "codigoPostal": "2505",
+  "provincia": "Santa Fe"
+}
+
+### 2. Crear Localidad 2 (Rosario)
+POST http://localhost:3000/api/localidades
+Content-Type: application/json
+
+{
+  "nombre": "Rosario",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
+
+### 3. Crear Usuario Cliente de Las Parejas (ajustar localidadId con ID_LOCALIDAD_LP)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "40111222",
+  "nombre": "Carlos",
+  "apellido": "Perez",
+  "email": "cliente.lp@test.com",
+  "password": "Password123",
+  "telefono": "3471112233",
+  "rol": "CLIENTE",
+  "localidadId": ID_LOCALIDAD_LP
+}
+
+### 4. Crear Usuario Cliente de Rosario (ajustar localidadId con ID_LOCALIDAD_ROSARIO)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "40333444",
+  "nombre": "Martin",
+  "apellido": "Gomez",
+  "email": "cliente.rosario@test.com",
+  "password": "Password123",
+  "telefono": "3415556677",
+  "rol": "CLIENTE",
+  "localidadId": ID_LOCALIDAD_ROSARIO
+}
+
+### 5. Crear Usuario Administrador (ajustar localidadId)
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "dni": "30000111",
+  "nombre": "Admin",
+  "apellido": "Principal",
+  "email": "admin@test.com",
+  "password": "Password123",
+  "telefono": "3471998877",
+  "rol": "ADMIN",
+  "localidadId": ID_LOCALIDAD_LP
+}
+
+### 6. Login de Cliente Las Parejas (Guardar TOKEN_CLIENTE_LP)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente.lp@test.com",
+  "password": "Password123"
+}
+
+### 7. Login de Cliente Rosario (Guardar TOKEN_CLIENTE_ROSARIO)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente.rosario@test.com",
+  "password": "Password123"
+}
+
+### 8. Login de Administrador (Guardar TOKEN_ADMIN)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "Password123"
+}
+
+### 9. Crear Medio de Pago
+POST http://localhost:3000/api/medios-pago
+Content-Type: application/json
+
+{
+  "descripcion": "Transferencia Bancaria"
+}
+
+### 10. Crear Almacén 1 (Local Físico)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Local Físico Central",
+  "direccion": "Calle 20 Nro 500, Las Parejas"
+}
+
+### 11. Crear Almacén 2 (Depósito)
+POST http://localhost:3000/api/almacenes
+Content-Type: application/json
+
+{
+  "descripcion": "Depósito Industrial",
+  "direccion": "Ruta 178 Km 2, Las Parejas"
+}
+
+### 12. Crear Categoría
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Herramientas Eléctricas"
+}
+
+### 13. Crear Marca
+POST http://localhost:3000/api/marcas
+Content-Type: application/json
+
+{
+  "nombre": "BOSCH"
+}
+
+### 14. Crear Proveedor
+POST http://localhost:3000/api/proveedores
+Content-Type: application/json
+
+{
+  "nombre": "Distribuidora Industrial S.A.",
+  "cuit": "30-77889900-4",
+  "telefono": "3414445566"
+}
+
+### 15. Crear Producto 1 (con precio vigente inicial de $100.000)
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Taladro Percutor 750W",
+  "descripcion": "Taladro con velocidad variable y percutor",
+  "categoriaId": ID_CATEGORIA,
+  "marcaId": ID_MARCA,
+  "proveedorId": ID_PROVEEDOR,
+  "precio": 100000
+}
+
+### 16. Crear Producto 2 (con precio vigente inicial de $50.000)
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Amoladora Angular 4 1/2",
+  "descripcion": "Amoladora angular 850W",
+  "categoriaId": ID_CATEGORIA,
+  "marcaId": ID_MARCA,
+  "proveedorId": ID_PROVEEDOR,
+  "precio": 50000
+}
+
+### 17. Cargar Stock de Producto 1 en Almacén 1 (Local: 6 unidades)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO_1,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 6
+}
+
+### 18. Cargar Stock de Producto 1 en Almacén 2 (Depósito: 4 unidades)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO_1,
+  "almacenId": ID_ALMACEN_2,
+  "cantidad": 4
+}
+
+### 19. Cargar Stock de Producto 2 en Almacén 1 (Local: 10 unidades)
+POST http://localhost:3000/api/stock
+Content-Type: application/json
+
+{
+  "productoId": ID_PRODUCTO_2,
+  "almacenId": ID_ALMACEN_1,
+  "cantidad": 10
+}
+
+
+### ============================================================
+### CASOS DE USO DE CREACIÓN DE PEDIDOS (POST /api/pedidos)
+### ============================================================
+
+### Caso 1: Crear pedido válido sin envío (Retiro en local)
+### Total esperado = 100.000, sin registro de Envio
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": false
+  }
+}
+
+### Caso 2: Crear pedido válido con envío dentro de Las Parejas ($3.000)
+### Total esperado = 100.000 + 3.000 = 103.000
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": true,
+    "domicilioEntrega": "Av. 25 de Mayo 123"
+  }
+}
+
+### Caso 3: Crear pedido válido con envío fuera de Las Parejas ($15.000)
+### Cliente de Rosario. Total esperado = 50.000 + 15.000 = 65.000
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_ROSARIO
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_2,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": true,
+    "domicilioEntrega": "Bv. Oroño 1200, Rosario"
+  }
+}
+
+### Caso 4: Crear pedido con varios productos
+### Total esperado = (1 * 100.000) + (2 * 50.000) + 3.000 = 203.000
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 1
+    },
+    {
+      "productoId": ID_PRODUCTO_2,
+      "cantidad": 2
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": true,
+    "domicilioEntrega": "Calle 15 Nro 800"
+  }
+}
+
+### Caso 5: Crear pedido consumiendo stock de ambos almacenes
+### Producto 1: pide 10 unidades (debe tomar 6 de Almacén 1 y 4 de Almacén 2)
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 10
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": false
+  }
+}
+
+### Caso 6: Intentar comprar más stock del disponible (debe fallar con 409 Conflict)
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 999
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": false
+  }
+}
+
+### Caso 7: Probar con producto inexistente (debe fallar con 404 Not Found)
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": 99999,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": false
+  }
+}
+
+### Caso 8: Probar con medio de pago inexistente (debe fallar con 404 Not Found)
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": 1
+    }
+  ],
+  "medioPagoId": 99999,
+  "envio": {
+    "requiereEnvio": false
+  }
+}
+
+### Caso 9: Probar con cantidad inválida <= 0 o decimal (debe fallar con 400 Bad Request)
+POST http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "productos": [
+    {
+      "productoId": ID_PRODUCTO_1,
+      "cantidad": -2
+    }
+  ],
+  "medioPagoId": ID_MEDIO_PAGO,
+  "envio": {
+    "requiereEnvio": false
+  }
+}
+
+
+### ============================================================
+### CONSULTAS DE PEDIDOS (GET /api/pedidos)
+### ============================================================
+
+### Caso 10: Obtener listado de pedidos como Administrador (ve todos)
+GET http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_ADMIN
+
+### Caso 10b: Obtener listado como Cliente (solo ve sus propios pedidos)
+GET http://localhost:3000/api/pedidos
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+### Caso 11: Filtrar pedidos por estado
+GET http://localhost:3000/api/pedidos?estado=PENDIENTE
+Authorization: Bearer TOKEN_ADMIN
+
+### Caso 12: Filtrar pedidos por rango de fechas
+GET http://localhost:3000/api/pedidos?fechaDesde=2026-01-01T00:00:00.000Z&fechaHasta=2026-12-31T23:59:59.999Z
+Authorization: Bearer TOKEN_ADMIN
+
+### Caso 13: Obtener pedido por ID con detalle completo
+GET http://localhost:3000/api/pedidos/ID_PEDIDO
+Authorization: Bearer TOKEN_ADMIN
+
+### Caso 14: Obtener pedido inexistente (debe fallar con 404 Not Found)
+GET http://localhost:3000/api/pedidos/99999
+Authorization: Bearer TOKEN_ADMIN
+
+
+### ============================================================
+### CAMBIO DE ESTADO (PATCH /api/pedidos/:id/estado)
+### ============================================================
+
+### Caso 15: Cambiar estado a CONFIRMADO (transición válida por Admin)
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "CONFIRMADO"
+}
+
+### Caso 15b: Avanzar a EN_PREPARACION
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "EN_PREPARACION"
+}
+
+### Caso 15c: Avanzar a ENVIADO
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "ENVIADO"
+}
+
+### Caso 15d: Avanzar a ENTREGADO
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "ENTREGADO"
+}
+
+### Caso 16: Probar transición de estado inválida hacia atrás (debe fallar con 409 Conflict)
+### Intentar pasar de ENTREGADO a PENDIENTE
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "estado": "PENDIENTE"
+}
+
+
+### ============================================================
+### CANCELACIÓN Y DEVOLUCIÓN DE STOCK (POST /api/pedidos/:id/cancelar)
+### ============================================================
+
+### Caso 17: Cancelar pedido (cambia a CANCELADO y revierte el stock)
+### Ajustar con ID_PEDIDO en estado PENDIENTE o CONFIRMADO
+POST http://localhost:3000/api/pedidos/ID_PEDIDO/cancelar
+Authorization: Bearer TOKEN_ADMIN
+
+### Caso 18: Verificar que la cancelación devolvió el stock a cada almacén
+GET http://localhost:3000/api/stock?productoId=ID_PRODUCTO_1
+
+### Caso 19: Probar cancelación de un pedido que no puede cancelarse (ej. ya ENTREGADO o ya CANCELADO)
+### Debe fallar con 409 Conflict
+POST http://localhost:3000/api/pedidos/ID_PEDIDO/cancelar
+Authorization: Bearer TOKEN_ADMIN
+
+
+### ============================================================
+### AUTENTICACIÓN Y AUTORIZACIÓN (CASO 20)
+### ============================================================
+
+### Probar consulta sin token JWT (debe fallar con 401 Unauthorized)
+GET http://localhost:3000/api/pedidos
+
+### Probar consulta con token inválido (debe fallar con 401 Unauthorized)
+GET http://localhost:3000/api/pedidos
+Authorization: Bearer token_invalido_xyz
+
+### Probar que un CLIENTE intente cambiar el estado (debe fallar con 403 Forbidden)
+PATCH http://localhost:3000/api/pedidos/ID_PEDIDO/estado
+Authorization: Bearer TOKEN_CLIENTE_LP
+Content-Type: application/json
+
+{
+  "estado": "CONFIRMADO"
+}
+
+### Probar que un CLIENTE intente ver el pedido de otro usuario (debe fallar con 403 Forbidden)
+GET http://localhost:3000/api/pedidos/ID_PEDIDO_AJENO
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+### Probar que un CLIENTE intente cancelar el pedido de otro usuario (debe fallar con 403 Forbidden)
+POST http://localhost:3000/api/pedidos/ID_PEDIDO_AJENO/cancelar
+Authorization: Bearer TOKEN_CLIENTE_LP
+
+
+### ============================================================
+### OPERACIONES CRUD ADICIONALES (PUT / DELETE)
+### ============================================================
+
+### Actualizar pedido en estado PENDIENTE (medio de pago o domicilio)
+PUT http://localhost:3000/api/pedidos/ID_PEDIDO
+Authorization: Bearer TOKEN_ADMIN
+Content-Type: application/json
+
+{
+  "medioPagoId": ID_MEDIO_PAGO,
+  "domicilioEntrega": "Nueva Dirección 456"
+}
+
+### Eliminar pedido CANCELADO (Admin)
+DELETE http://localhost:3000/api/pedidos/ID_PEDIDO_CANCELADO
+Authorization: Bearer TOKEN_ADMIN
+
+### Intentar eliminar pedido que NO está cancelado (debe fallar con 409 Conflict)
+DELETE http://localhost:3000/api/pedidos/ID_PEDIDO_NO_CANCELADO
+Authorization: Bearer TOKEN_ADMIN

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { UnauthorizedError } from "../errors/UnauthorizedError.js";
+import { ForbiddenError } from "../errors/ForbiddenError.js";
 
 export function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -18,4 +19,20 @@ export function authMiddleware(req, res, next) {
   } catch (err) {
     next(new UnauthorizedError("Token inválido o vencido."));
   }
+}
+
+export function requireRole(...rolesPermitidos) {
+  return (req, res, next) => {
+    if (!req.usuario) {
+      return next(new UnauthorizedError("Token no provisto."));
+    }
+
+    if (!rolesPermitidos.includes(req.usuario.rol)) {
+      return next(
+        new ForbiddenError("No tienes permisos para realizar esta acción.")
+      );
+    }
+
+    next();
+  };
 }

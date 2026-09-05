@@ -11,6 +11,8 @@ import almacenRouter from "./modules/almacenes/index.js";
 import usuariosRouter from "./modules/usuarios/index.js";
 import stockRouter from "./modules/stock/index.js";
 import precioRouter, { historialPrecioRouter } from "./modules/precios/index.js";
+import pedidosRouter from "./modules/pedidos/index.js";
+import enviosRouter from "./modules/envios/index.js";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
@@ -31,6 +33,8 @@ app.use("/api/productos", productosRouter);
 app.use("/api/almacenes", almacenRouter);
 app.use("/api/usuarios", usuariosRouter);
 app.use("/api/stock", stockRouter);
+app.use("/api/pedidos", pedidosRouter);
+app.use("/api/envios", enviosRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
