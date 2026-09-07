@@ -21,9 +21,7 @@ import {
 
 const router = Router();
 
-// Todas las operaciones de gestión de stock son administrativas
-router.use(authMiddleware, requireRole("ADMIN"));
-
+// Consulta de stock/disponibilidad: pública
 router.get(
   "/",
   validateFiltrosStock,
@@ -36,14 +34,19 @@ router.get(
   obtenerStockPorId
 );
 
+// Gestión de stock: administrativa
 router.post(
   "/",
+  authMiddleware,
+  requireRole("ADMIN"),
   validateCrearStock,
   crearStock
 );
 
 router.put(
   "/:id",
+  authMiddleware,
+  requireRole("ADMIN"),
   validateIdStock,
   validateActualizarStock,
   actualizarStock
@@ -51,6 +54,8 @@ router.put(
 
 router.delete(
   "/:id",
+  authMiddleware,
+  requireRole("ADMIN"),
   validateIdStock,
   eliminarStock
 );
