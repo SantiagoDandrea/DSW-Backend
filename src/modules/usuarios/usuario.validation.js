@@ -142,6 +142,32 @@ export function validateActualizarUsuario(req, res, next) {
   }
 }
 
+function validarDatosActualizacionPropia(body) {
+  const nombre = validarTexto(body.nombre, "nombre");
+  const apellido = validarTexto(body.apellido, "apellido");
+  const email = validarEmail(body.email);
+  const telefono = validarTexto(body.telefono, "telefono");
+  const localidadId = validarIdReferencia(body.localidadId, "localidadId");
+
+  // rol y dni no son editables por el propio usuario, se ignoran aunque vengan en el body
+  return { nombre, apellido, email, telefono, localidadId };
+}
+
+export function validateActualizarMe(req, res, next) {
+  try {
+    const datos = validarDatosActualizacionPropia(req.body);
+
+    if (req.body.password !== undefined) {
+      datos.password = validarPassword(req.body.password);
+    }
+
+    req.body = datos;
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
 export function validateDniUsuario(req, res, next) {
   try {
     req.params.dni = validarDni(req.params.dni);

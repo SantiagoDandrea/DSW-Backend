@@ -12,8 +12,15 @@ import {
   validateActualizarAlmacen,
   validateIdAlmacen,
 } from "./almacen.validation.js";
+import {
+  authMiddleware,
+  requireRole,
+} from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+
+// Todas las operaciones de gestión de almacenes son administrativas
+router.use(authMiddleware, requireRole("ADMIN"));
 
 router.get("/", obtenerAlmacenes);
 
