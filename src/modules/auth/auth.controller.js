@@ -1,4 +1,5 @@
 import { authService } from "./auth.service.js";
+import { usuarioService } from "../usuarios/usuario.service.js";
 import { mapUsuario } from "../usuarios/usuario.mapper.js";
 
 export const authController = {
@@ -22,6 +23,15 @@ export const authController = {
   async me(req, res, next) {
     try {
       const usuario = await authService.obtenerUsuarioActual(req.usuario.dni);
+      res.json(mapUsuario(usuario));
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async actualizarMe(req, res, next) {
+    try {
+      const usuario = await usuarioService.actualizarUsuario(req.usuario.dni, req.body);
       res.json(mapUsuario(usuario));
     } catch (err) {
       next(err);
