@@ -12,6 +12,15 @@ export const authController = {
     }
   },
 
+  async register(req, res, next) {
+    try {
+      const { token, usuario } = await authService.register(req.body);
+      res.status(201).json({ token, usuario: mapUsuario(usuario) });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async logout(req, res, next) {
     try {
       res.status(200).json({ mensaje: "Sesión cerrada." });

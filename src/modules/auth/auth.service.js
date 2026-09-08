@@ -1,11 +1,18 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { usuarioRepository } from "../usuarios/usuario.repository.js";
+import { usuarioService } from "../usuarios/usuario.service.js";
 import { env } from "../../config/env.js";
 import { UnauthorizedError } from "../../errors/UnauthorizedError.js";
 
 const MENSAJE_CREDENCIALES_INVALIDAS = "Email o contraseña incorrectos.";
 const EXPIRACION_TOKEN = "1d";
+
+function generarToken(usuario) {
+  return jwt.sign({ dni: usuario.dni, rol: usuario.rol }, env.jwtSecret, {
+    expiresIn: EXPIRACION_TOKEN,
+  });
+}
 
 export const authService = {
   async login({ email, password }) {
@@ -21,9 +28,14 @@ export const authService = {
       throw new UnauthorizedError(MENSAJE_CREDENCIALES_INVALIDAS);
     }
 
-    const token = jwt.sign({ dni: usuario.dni, rol: usuario.rol }, env.jwtSecret, {
-      expiresIn: EXPIRACION_TOKEN,
-    });
+    const token = generarToken(usuario);
+
+    return { token, usuario };
+  },
+
+  async register(datosUsuario) {
+    const usuario = await usuarioService.crearUsuario(datosUsuario);
+    const token = generarToken(usuario);
 
     return { token, usuario };
   },

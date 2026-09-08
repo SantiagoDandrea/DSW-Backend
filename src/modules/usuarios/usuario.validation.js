@@ -142,6 +142,28 @@ export function validateActualizarUsuario(req, res, next) {
   }
 }
 
+function validarDatosRegistro(body) {
+  const dni = validarDni(body.dni);
+  const nombre = validarTexto(body.nombre, "nombre");
+  const apellido = validarTexto(body.apellido, "apellido");
+  const email = validarEmail(body.email);
+  const telefono = validarTexto(body.telefono, "telefono");
+  const localidadId = validarIdReferencia(body.localidadId, "localidadId");
+  const password = validarPassword(body.password);
+
+  // El registro público siempre crea un CLIENTE, "rol" nunca se acepta del body
+  return { dni, nombre, apellido, email, telefono, localidadId, password, rol: "CLIENTE" };
+}
+
+export function validateRegistro(req, res, next) {
+  try {
+    req.body = validarDatosRegistro(req.body);
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
 function validarDatosActualizacionPropia(body) {
   const nombre = validarTexto(body.nombre, "nombre");
   const apellido = validarTexto(body.apellido, "apellido");
