@@ -175,7 +175,7 @@ Elimina un producto. Requiere rol `ADMIN`. Falla con 409 si tiene stock o pedido
 
 ---
 
-## Precios
+# Precios
 
 Todos los endpoints de precios son administrativos y requieren autenticación con rol `ADMIN`.
 
@@ -228,7 +228,7 @@ Obtiene el historial de precios del producto, ordenado por fechaDesde de forma d
 
 ---
 
-## Imágenes
+# Imágenes
 
 ### GET /productos/:id/imagenes
 
@@ -756,10 +756,10 @@ El sistema implementa control de acceso basado en roles (`RBAC`) con dos roles d
 | **Medios de Pago** (`/medios-pago`) | **Público** | Solo **ADMIN** |
 | **Usuarios** (`/usuarios`) | Solo **ADMIN** | Solo **ADMIN** |
 | **Proveedores** (`/proveedores`) | Solo **ADMIN** | Solo **ADMIN** |
-| **Stock / Inventario** (`/stock`) | Solo **ADMIN** | Solo **ADMIN** |
+| **Stock / Inventario** (`/stock`) | **Público** | Solo **ADMIN** |
 | **Almacenes** (`/almacenes`) | Solo **ADMIN** | Solo **ADMIN** |
 | **Precios** (`/precios`, `/productos/:id/precios`) | Solo **ADMIN** | Solo **ADMIN** |
 | **Auth** (`/auth/login`, `/auth/logout`) | **Público** | **Público** |
-| **Perfil Propio** (`/auth/me`) | **CLIENTE** y **ADMIN** | N/A |
+| **Perfil Propio** (`/auth/me`) | **CLIENTE** y **ADMIN** | **CLIENTE** y **ADMIN** |
 | **Pedidos** (`/pedidos`) | **CLIENTE** (solo propios) / **ADMIN** (todos) | `POST`: CLIENTE (a su nombre) / ADMIN<br>`PATCH /:id/estado`: Solo **ADMIN**<br>`POST /:id/cancelar`: CLIENTE (solo propios) / ADMIN<br>`PUT /:id`, `DELETE /:id`: Solo **ADMIN** |
 | **Envíos** (`/envios`) | **CLIENTE** (solo propios) / **ADMIN** (todos) | `PUT /:id`: CLIENTE (solo propios PENDIENTES) / ADMIN<br>`POST /:id/cancelar`: CLIENTE (solo propios cancelables) / ADMIN |
