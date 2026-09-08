@@ -32,6 +32,36 @@ Respuesta (200):
 
 - Si el email no existe o la contraseña no coincide, responde 401 con un mensaje genérico ("Email o contraseña incorrectos.") — no distingue cuál de los dos fue el problema, por seguridad.
 
+## POST /auth/register
+
+Registro público: crea una cuenta de cliente y devuelve un JWT de una, igual que `/login` (no hace falta loguearse aparte después).
+
+Body:
+
+```json
+{
+  "dni": "30111222",
+  "nombre": "string",
+  "apellido": "string",
+  "email": "string",
+  "password": "string",
+  "telefono": "string",
+  "localidadId": 1
+}
+```
+
+Respuesta (201):
+
+```json
+{
+  "token": "string",
+  "usuario": { "dni": "...", "nombre": "...", "...": "mismo formato que GET /usuarios/:dni" }
+}
+```
+
+- El rol se fuerza siempre a `CLIENTE` en el servidor — si se manda `rol` en el body, se ignora, no se puede crear una cuenta ADMIN por acá.
+- Mismas validaciones que `POST /usuarios` (dni, password, email único, localidadId existente), sin el campo `rol`.
+
 ## POST /auth/logout
 
 Cierra la sesión. Como el token es JWT (stateless), el servidor no lo invalida ni lo revoca — quien debe descartarlo es el cliente. Este endpoint no requiere estar autenticado y siempre responde 200.
@@ -44,6 +74,26 @@ Requiere el header `Authorization: Bearer <token>` con un token válido.
 
 - Sin header, con formato inválido, o con un token vencido/con firma inválida: 401.
 - Si el usuario del token ya no existe en la base (fue eliminado después de emitirse el token): 401.
+
+## PUT /auth/me
+
+Actualiza el perfil del usuario autenticado (nombre, apellido, email, teléfono, localidad, y opcionalmente password).
+
+Body (los que se quieran actualizar):
+
+```json
+{
+  "nombre": "string",
+  "apellido": "string",
+  "email": "string",
+  "telefono": "string",
+  "localidadId": 1,
+  "password": "string"
+}
+```
+
+- `rol` y `dni` no son editables por esta vía — si se mandan en el body, se ignoran.
+- `password` es opcional: si no se manda, no se toca la actual.
 
 ---
 
