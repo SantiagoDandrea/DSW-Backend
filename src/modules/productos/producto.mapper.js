@@ -19,6 +19,7 @@ export function mapProducto(producto) {
     marca: { id: producto.marca.id, nombre: producto.marca.nombre },
     proveedor: { id: producto.proveedor.id, nombre: producto.proveedor.nombre },
     precioActual: producto.precios[0] ? Number(producto.precios[0].valor) : null,
+    disponible: (producto.stock ?? []).some((s) => s.cantidad > 0),
     imagenes: mapImagenes(producto.imagenes),
   };
 }

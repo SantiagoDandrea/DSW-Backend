@@ -17,6 +17,9 @@ function obtenerProductoInclude() {
     imagenes: {
       orderBy: [{ orden: "asc" }, { id: "asc" }],
     },
+    stock: {
+      select: { cantidad: true },
+    },
   };
 }
 
