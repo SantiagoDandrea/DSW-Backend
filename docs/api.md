@@ -180,7 +180,9 @@ Las operaciones de consulta (`GET`) del catálogo de productos e imágenes son p
 
 ## GET /productos
 
-Listado de productos. (Público). Incluye categoría, marca, proveedor, precio vigente e imágenes de cada uno.
+Listado de productos. (Público). Incluye categoría, marca, proveedor, precio vigente, disponibilidad e imágenes de cada uno.
+
+- `disponible`: booleano — `true` si hay stock en algún almacén. No expone la cantidad exacta ni el desglose por almacén, eso es información administrativa (ver módulo Stock).
 
 Filtros (query params, todos opcionales):
 
@@ -192,9 +194,9 @@ Filtros (query params, todos opcionales):
 
 ## GET /productos/:id
 
-Detalle del producto. (Público). Incluye categoría, marca, proveedor, precio vigente e imágenes.
+Detalle del producto. (Público). Incluye categoría, marca, proveedor, precio vigente, disponibilidad e imágenes (mismo campo `disponible` que en el listado).
 
-Nota: `stock` y `almacenes` todavía no se incluyen — se agregan cuando se implemente ese módulo.
+Nota: el desglose de stock por almacén es información administrativa, no se expone acá — ver módulo Stock.
 
 ## POST /productos
 
@@ -806,7 +808,7 @@ El sistema implementa control de acceso basado en roles (`RBAC`) con dos roles d
 | **Medios de Pago** (`/medios-pago`) | **Público** | Solo **ADMIN** |
 | **Usuarios** (`/usuarios`) | Solo **ADMIN** | Solo **ADMIN** |
 | **Proveedores** (`/proveedores`) | Solo **ADMIN** | Solo **ADMIN** |
-| **Stock / Inventario** (`/stock`) | **Público** | Solo **ADMIN** |
+| **Stock / Inventario** (`/stock`) | Solo **ADMIN** | Solo **ADMIN** |
 | **Almacenes** (`/almacenes`) | Solo **ADMIN** | Solo **ADMIN** |
 | **Precios** (`/precios`, `/productos/:id/precios`) | Solo **ADMIN** | Solo **ADMIN** |
 | **Auth** (`/auth/login`, `/auth/logout`) | **Público** | **Público** |

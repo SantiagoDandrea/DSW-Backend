@@ -21,7 +21,11 @@ import {
 
 const router = Router();
 
-// Consulta de stock/disponibilidad: pública
+// Todas las operaciones de gestión de stock son administrativas.
+// La disponibilidad para el catálogo público se resuelve vía Producto (campo "disponible"),
+// no exponiendo cantidades exactas ni el desglose por almacén.
+router.use(authMiddleware, requireRole("ADMIN"));
+
 router.get(
   "/",
   validateFiltrosStock,
@@ -34,19 +38,14 @@ router.get(
   obtenerStockPorId
 );
 
-// Gestión de stock: administrativa
 router.post(
   "/",
-  authMiddleware,
-  requireRole("ADMIN"),
   validateCrearStock,
   crearStock
 );
 
 router.put(
   "/:id",
-  authMiddleware,
-  requireRole("ADMIN"),
   validateIdStock,
   validateActualizarStock,
   actualizarStock
@@ -54,8 +53,6 @@ router.put(
 
 router.delete(
   "/:id",
-  authMiddleware,
-  requireRole("ADMIN"),
   validateIdStock,
   eliminarStock
 );
