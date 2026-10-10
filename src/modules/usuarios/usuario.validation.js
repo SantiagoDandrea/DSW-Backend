@@ -86,6 +86,14 @@ function validarPassword(password) {
   return password;
 }
 
+function validarActivo(activo) {
+  if (activo === undefined || activo === null) return undefined;
+  if (typeof activo !== "boolean") {
+    throw new ValidationError("El campo activo debe ser un booleano.");
+  }
+  return activo;
+}
+
 function validarRol(rol) {
   if (!ROLES_VALIDOS.includes(rol)) {
     throw new ValidationError("El rol debe ser ADMIN o CLIENTE.");
@@ -114,8 +122,11 @@ function validarDatosActualizacion(body) {
   const telefono = validarTexto(body.telefono, "telefono");
   const rol = validarRol(body.rol);
   const localidadId = validarIdReferencia(body.localidadId, "localidadId");
+  const activo = validarActivo(body.activo);
 
-  return { nombre, apellido, email, telefono, rol, localidadId };
+  const datos = { nombre, apellido, email, telefono, rol, localidadId };
+  if (activo !== undefined) datos.activo = activo;
+  return datos;
 }
 
 export function validateCrearUsuario(req, res, next) {
@@ -171,8 +182,8 @@ function validarDatosActualizacionPropia(body) {
   const telefono = validarTexto(body.telefono, "telefono");
   const localidadId = validarIdReferencia(body.localidadId, "localidadId");
 
-  // rol y dni no son editables por el propio usuario, se ignoran aunque vengan en el body
-  return { nombre, apellido, email, telefono, localidadId };
+  const datos = { nombre, apellido, email, telefono, localidadId };
+  return datos;
 }
 
 export function validateActualizarMe(req, res, next) {

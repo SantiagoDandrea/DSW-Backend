@@ -85,10 +85,11 @@ export const usuarioService = {
     return usuarioRepository.obtenerUsuarios(filtros);
   },
 
-  async actualizarUsuario(dni, { nombre, apellido, email, telefono, rol, localidadId, password }) {
+  async actualizarUsuario(dni, { nombre, apellido, email, telefono, rol, localidadId, password, activo }) {
     await validarReferencias({ localidadId });
 
     const datos = { nombre, apellido, email, telefono, rol, localidadId };
+    if (activo !== undefined) datos.activo = activo;
 
     if (password !== undefined) {
       datos.password = await bcrypt.hash(password, SALT_ROUNDS);

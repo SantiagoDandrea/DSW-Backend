@@ -115,6 +115,18 @@ export function validateCrearPedido(req, res, next) {
           requiereEnvio: true,
           domicilioEntrega: envio.domicilioEntrega.trim(),
         };
+
+        if (envio.tipoEnvio !== undefined && envio.tipoEnvio !== null) {
+          const tipo = String(envio.tipoEnvio).trim().toUpperCase();
+          if (tipo !== "LOCAL" && tipo !== "NACIONAL") {
+            throw new ValidationError("El campo 'tipoEnvio' debe ser 'LOCAL' o 'NACIONAL'.");
+          }
+          envioValidado.tipoEnvio = tipo;
+        }
+
+        if (envio.localidad !== undefined && envio.localidad !== null) {
+          envioValidado.localidad = String(envio.localidad).trim();
+        }
       }
     }
 

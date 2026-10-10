@@ -28,6 +28,10 @@ export const authService = {
       throw new UnauthorizedError(MENSAJE_CREDENCIALES_INVALIDAS);
     }
 
+    if (!usuario.activo) {
+      throw new UnauthorizedError("El usuario se encuentra inactivo. Contacte al administrador.");
+    }
+
     const token = generarToken(usuario);
 
     return { token, usuario };
@@ -45,6 +49,10 @@ export const authService = {
 
     if (!usuario) {
       throw new UnauthorizedError("El usuario del token ya no existe.");
+    }
+
+    if (!usuario.activo) {
+      throw new UnauthorizedError("El usuario se encuentra inactivo.");
     }
 
     return usuario;
