@@ -1,3 +1,46 @@
+function agruparDetallesPorProducto(detalles) {
+  if (!Array.isArray(detalles)) return [];
+
+  const mapa = new Map();
+
+  for (const detalle of detalles) {
+    const prodId = detalle.productoId;
+    const precioUnitario = Number(detalle.precioUnitario);
+    const subtotal = detalle.cantidad * precioUnitario;
+
+    if (!mapa.has(prodId)) {
+      mapa.set(prodId, {
+        id: detalle.id,
+        productoId: prodId,
+        producto: detalle.producto
+          ? {
+              id: detalle.producto.id,
+              nombre: detalle.producto.nombre,
+              descripcion: detalle.producto.descripcion,
+            }
+          : undefined,
+        almacenId: detalle.almacenId,
+        almacen: detalle.almacen
+          ? {
+              id: detalle.almacen.id,
+              descripcion: detalle.almacen.descripcion,
+              direccion: detalle.almacen.direccion,
+            }
+          : undefined,
+        cantidad: detalle.cantidad,
+        precioUnitario,
+        subtotal,
+      });
+    } else {
+      const itemExistente = mapa.get(prodId);
+      itemExistente.cantidad += detalle.cantidad;
+      itemExistente.subtotal += subtotal;
+    }
+  }
+
+  return Array.from(mapa.values());
+}
+
 export function mapPedido(pedido) {
   if (!pedido) return null;
 
@@ -29,30 +72,7 @@ export function mapPedido(pedido) {
           descripcion: pedido.medioPago.descripcion,
         }
       : undefined,
-    detalles: Array.isArray(pedido.detalles)
-      ? pedido.detalles.map((detalle) => ({
-          id: detalle.id,
-          productoId: detalle.productoId,
-          producto: detalle.producto
-            ? {
-                id: detalle.producto.id,
-                nombre: detalle.producto.nombre,
-                descripcion: detalle.producto.descripcion,
-              }
-            : undefined,
-          almacenId: detalle.almacenId,
-          almacen: detalle.almacen
-            ? {
-                id: detalle.almacen.id,
-                descripcion: detalle.almacen.descripcion,
-                direccion: detalle.almacen.direccion,
-              }
-            : undefined,
-          cantidad: detalle.cantidad,
-          precioUnitario: Number(detalle.precioUnitario),
-          subtotal: detalle.cantidad * Number(detalle.precioUnitario),
-        }))
-      : [],
+    detalles: agruparDetallesPorProducto(pedido.detalles),
     envio: pedido.envio
       ? {
           id: pedido.envio.id,
