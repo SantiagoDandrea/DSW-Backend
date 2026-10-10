@@ -52,7 +52,6 @@ model Usuario {
   email         String    @unique
   password      String
   telefono      String
-  domicilio     String?
   activo        Boolean   @default(true)
 
   rol           Rol

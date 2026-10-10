@@ -86,15 +86,6 @@ function validarPassword(password) {
   return password;
 }
 
-function validarDomicilio(domicilio) {
-  if (domicilio === undefined || domicilio === null) return null;
-  if (typeof domicilio !== "string") {
-    throw new ValidationError("El domicilio debe ser un texto.");
-  }
-  const lim = domicilio.trim();
-  return lim.length > 0 ? lim : null;
-}
-
 function validarActivo(activo) {
   if (activo === undefined || activo === null) return undefined;
   if (typeof activo !== "boolean") {
@@ -120,9 +111,8 @@ function validarDatosCreacion(body) {
   const rol = validarRol(body.rol);
   const localidadId = validarIdReferencia(body.localidadId, "localidadId");
   const password = validarPassword(body.password);
-  const domicilio = validarDomicilio(body.domicilio);
 
-  return { dni, nombre, apellido, email, telefono, rol, localidadId, password, domicilio };
+  return { dni, nombre, apellido, email, telefono, rol, localidadId, password };
 }
 
 function validarDatosActualizacion(body) {
@@ -132,11 +122,9 @@ function validarDatosActualizacion(body) {
   const telefono = validarTexto(body.telefono, "telefono");
   const rol = validarRol(body.rol);
   const localidadId = validarIdReferencia(body.localidadId, "localidadId");
-  const domicilio = body.domicilio !== undefined ? validarDomicilio(body.domicilio) : undefined;
   const activo = validarActivo(body.activo);
 
   const datos = { nombre, apellido, email, telefono, rol, localidadId };
-  if (domicilio !== undefined) datos.domicilio = domicilio;
   if (activo !== undefined) datos.activo = activo;
   return datos;
 }
@@ -193,10 +181,8 @@ function validarDatosActualizacionPropia(body) {
   const email = validarEmail(body.email);
   const telefono = validarTexto(body.telefono, "telefono");
   const localidadId = validarIdReferencia(body.localidadId, "localidadId");
-  const domicilio = body.domicilio !== undefined ? validarDomicilio(body.domicilio) : undefined;
 
   const datos = { nombre, apellido, email, telefono, localidadId };
-  if (domicilio !== undefined) datos.domicilio = domicilio;
   return datos;
 }
 
