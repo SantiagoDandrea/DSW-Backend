@@ -1,5 +1,5 @@
 import { pedidoRepository } from "./pedido.repository.js";
-import { envioService } from "../envios/envio.service.js";
+import { envioService, TARIFAS_ENVIO } from "../envios/envio.service.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
 import { ForbiddenError } from "../../errors/ForbiddenError.js";
@@ -103,7 +103,16 @@ export const pedidoService = {
     let datosEnvio = null;
 
     if (body.envio?.requiereEnvio) {
-      costoEnvio = envioService.calcularCosto(usuario.localidad?.nombre);
+      if (body.envio.tipoEnvio === "LOCAL") {
+        costoEnvio = TARIFAS_ENVIO.LOCAL;
+      } else if (body.envio.tipoEnvio === "NACIONAL") {
+        costoEnvio = TARIFAS_ENVIO.NACIONAL;
+      } else if (body.envio.localidad) {
+        costoEnvio = envioService.calcularCosto(body.envio.localidad);
+      } else {
+        costoEnvio = envioService.calcularCosto(usuario.localidad?.nombre);
+      }
+
       datosEnvio = {
         domicilioEntrega: body.envio.domicilioEntrega,
       };
