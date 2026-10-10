@@ -52,6 +52,8 @@ model Usuario {
   email         String    @unique
   password      String
   telefono      String
+  domicilio     String?
+  activo        Boolean   @default(true)
 
   rol           Rol
 
@@ -95,11 +97,11 @@ model Producto {
 
   categoriaId   Int
   marcaId       Int
-  proveedorId   Int
+  proveedorId   Int?
 
-  categoria     Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
-  marca         Marca     @relation(fields: [marcaId], references: [id], onDelete: Restrict)
-  proveedor     Proveedor @relation(fields: [proveedorId], references: [id], onDelete: Restrict)
+  categoria     Categoria  @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  marca         Marca      @relation(fields: [marcaId], references: [id], onDelete: Restrict)
+  proveedor     Proveedor? @relation(fields: [proveedorId], references: [id], onDelete: Restrict)
 
   imagenes      ImagenProducto[]
   precios       Precio[]

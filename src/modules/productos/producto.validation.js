@@ -64,7 +64,10 @@ function validarDatosProducto(body) {
   const descripcion = validarTexto(body.descripcion, "descripcion");
   const categoriaId = validarIdReferencia(body.categoriaId, "categoriaId");
   const marcaId = validarIdReferencia(body.marcaId, "marcaId");
-  const proveedorId = validarIdReferencia(body.proveedorId, "proveedorId");
+  let proveedorId = null;
+  if (body.proveedorId !== undefined && body.proveedorId !== null && body.proveedorId !== "") {
+    proveedorId = validarIdReferencia(body.proveedorId, "proveedorId");
+  }
 
   return { nombre, descripcion, categoriaId, marcaId, proveedorId };
 }

@@ -49,7 +49,7 @@ async function validarReferencias({ localidadId }) {
 }
 
 export const usuarioService = {
-  async crearUsuario({ dni, nombre, apellido, email, password, telefono, rol, localidadId }) {
+  async crearUsuario({ dni, nombre, apellido, email, password, telefono, rol, localidadId, domicilio }) {
     await validarReferencias({ localidadId });
 
     const passHasheada = await bcrypt.hash(password, SALT_ROUNDS);
@@ -85,10 +85,12 @@ export const usuarioService = {
     return usuarioRepository.obtenerUsuarios(filtros);
   },
 
-  async actualizarUsuario(dni, { nombre, apellido, email, telefono, rol, localidadId, password }) {
+  async actualizarUsuario(dni, { nombre, apellido, email, telefono, rol, localidadId, password, domicilio, activo }) {
     await validarReferencias({ localidadId });
 
     const datos = { nombre, apellido, email, telefono, rol, localidadId };
+    if (domicilio !== undefined) datos.domicilio = domicilio;
+    if (activo !== undefined) datos.activo = activo;
 
     if (password !== undefined) {
       datos.password = await bcrypt.hash(password, SALT_ROUNDS);

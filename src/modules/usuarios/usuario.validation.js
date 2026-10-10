@@ -86,6 +86,23 @@ function validarPassword(password) {
   return password;
 }
 
+function validarDomicilio(domicilio) {
+  if (domicilio === undefined || domicilio === null) return null;
+  if (typeof domicilio !== "string") {
+    throw new ValidationError("El domicilio debe ser un texto.");
+  }
+  const lim = domicilio.trim();
+  return lim.length > 0 ? lim : null;
+}
+
+function validarActivo(activo) {
+  if (activo === undefined || activo === null) return undefined;
+  if (typeof activo !== "boolean") {
+    throw new ValidationError("El campo activo debe ser un booleano.");
+  }
+  return activo;
+}
+
 function validarRol(rol) {
   if (!ROLES_VALIDOS.includes(rol)) {
     throw new ValidationError("El rol debe ser ADMIN o CLIENTE.");
@@ -103,8 +120,9 @@ function validarDatosCreacion(body) {
   const rol = validarRol(body.rol);
   const localidadId = validarIdReferencia(body.localidadId, "localidadId");
   const password = validarPassword(body.password);
+  const domicilio = validarDomicilio(body.domicilio);
 
-  return { dni, nombre, apellido, email, telefono, rol, localidadId, password };
+  return { dni, nombre, apellido, email, telefono, rol, localidadId, password, domicilio };
 }
 
 function validarDatosActualizacion(body) {
@@ -114,8 +132,13 @@ function validarDatosActualizacion(body) {
   const telefono = validarTexto(body.telefono, "telefono");
   const rol = validarRol(body.rol);
   const localidadId = validarIdReferencia(body.localidadId, "localidadId");
+  const domicilio = body.domicilio !== undefined ? validarDomicilio(body.domicilio) : undefined;
+  const activo = validarActivo(body.activo);
 
-  return { nombre, apellido, email, telefono, rol, localidadId };
+  const datos = { nombre, apellido, email, telefono, rol, localidadId };
+  if (domicilio !== undefined) datos.domicilio = domicilio;
+  if (activo !== undefined) datos.activo = activo;
+  return datos;
 }
 
 export function validateCrearUsuario(req, res, next) {
@@ -170,9 +193,11 @@ function validarDatosActualizacionPropia(body) {
   const email = validarEmail(body.email);
   const telefono = validarTexto(body.telefono, "telefono");
   const localidadId = validarIdReferencia(body.localidadId, "localidadId");
+  const domicilio = body.domicilio !== undefined ? validarDomicilio(body.domicilio) : undefined;
 
-  // rol y dni no son editables por el propio usuario, se ignoran aunque vengan en el body
-  return { nombre, apellido, email, telefono, localidadId };
+  const datos = { nombre, apellido, email, telefono, localidadId };
+  if (domicilio !== undefined) datos.domicilio = domicilio;
+  return datos;
 }
 
 export function validateActualizarMe(req, res, next) {

@@ -5,6 +5,8 @@ export function mapUsuario(usuario) {
     apellido: usuario.apellido,
     email: usuario.email,
     telefono: usuario.telefono,
+    domicilio: usuario.domicilio ?? null,
+    activo: usuario.activo,
     rol: usuario.rol,
     localidad: { id: usuario.localidad.id, nombre: usuario.localidad.nombre },
   };

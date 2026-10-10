@@ -13,7 +13,7 @@ const TRANSICIONES_PERMITIDAS = {
   CANCELADO: [],
 };
 
-const ESTADOS_CANCELABLES = ["PENDIENTE", "CONFIRMADO", "EN_PREPARACION"];
+const ESTADOS_CANCELABLES = ["PENDIENTE", "CONFIRMADO"];
 
 export const pedidoService = {
   async crearPedido({ usuarioAuth, body }) {

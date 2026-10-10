@@ -25,10 +25,9 @@ function mensajeNoExiste(id) {
 }
 
 async function validarReferencias({ categoriaId, marcaId, proveedorId }) {
-  const [categoria, marca, proveedor] = await Promise.all([
+  const [categoria, marca] = await Promise.all([
     categoriaRepository.obtenerCategoriaPorId(categoriaId),
     marcaRepository.obtenerMarcaPorId(marcaId),
-    proveedorRepository.obtenerProveedorPorId(proveedorId),
   ]);
 
   if (!categoria) {
@@ -37,8 +36,11 @@ async function validarReferencias({ categoriaId, marcaId, proveedorId }) {
   if (!marca) {
     throw new NotFoundError(`No existe una marca con id ${marcaId}.`);
   }
-  if (!proveedor) {
-    throw new NotFoundError(`No existe un proveedor con id ${proveedorId}.`);
+  if (proveedorId !== null && proveedorId !== undefined) {
+    const proveedor = await proveedorRepository.obtenerProveedorPorId(proveedorId);
+    if (!proveedor) {
+      throw new NotFoundError(`No existe un proveedor con id ${proveedorId}.`);
+    }
   }
 }
 
