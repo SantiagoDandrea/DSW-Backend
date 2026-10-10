@@ -61,8 +61,9 @@ export const usuarioRepository = {
   },
 
   eliminarUsuario(dni) {
-    return prisma.usuario.delete({
+    return prisma.usuario.update({
       where: { dni },
+      data: { activo: false },
     });
   },
 };
