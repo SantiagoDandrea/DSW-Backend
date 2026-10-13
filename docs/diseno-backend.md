@@ -131,4 +131,4 @@ Pedido ── Envio (1 : 1)
 - **Disponibilidad pública:** el módulo Stock es administrativo. El catálogo informa la disponibilidad con un campo calculado en el producto (`disponible`), sin desglose por almacén.
 - **Estado del envío derivado del pedido:** el estado del envío acompaña al del pedido. Cancelar solo el envío (por ejemplo, para retirar en el local) no cancela el pedido ni toca el stock.
 - **Clave primaria natural en Usuario:** el DNI identifica a la persona, por lo que no se agrega un identificador artificial.
-- **Desactivación de usuarios:** el campo `activo` permite impedir el acceso de un usuario sin perder el historial de sus pedidos.
+- **Desactivación de usuarios:** el campo `activo` permite impedir el acceso de un usuario sin perder el historial de sus pedidos. Por eso `DELETE /usuarios/:dni` es una baja lógica y no borra el registro.

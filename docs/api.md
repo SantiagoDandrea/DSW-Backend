@@ -143,13 +143,15 @@ Body:
 
 ## PUT /usuarios/:dni
 
-Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad). Requiere rol `ADMIN`. El `dni` no se puede modificar por esta vía.
+Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad, `activo`). Requiere rol `ADMIN`. El `dni` no se puede modificar por esta vía.
 
 `password` es opcional: si se manda, se valida y se hashea de nuevo, reemplazando el hash guardado. Si no se manda, la contraseña actual no se toca.
 
 ## DELETE /usuarios/:dni
 
-Elimina un usuario. Requiere rol `ADMIN`. Falla con 409 si tiene pedidos asociados.
+Da de baja al usuario de forma lógica: no se borra, se marca `activo: false`. Requiere rol `ADMIN`. Responde 204, o 404 si el usuario no existe.
+
+El usuario conserva sus pedidos y sigue apareciendo en el listado, pero no puede iniciar sesión. Se reactiva con `PUT /usuarios/:dni` enviando `activo: true`.
 
 ---
 

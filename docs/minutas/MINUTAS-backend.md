@@ -2,6 +2,7 @@
 
 Grupo: Santiago D'Andrea, Martín De Benedetti, Santino Ravarotto, Guillermo Giannuzzi.
 Metodología: Kanban informal, coordinación diaria por Discord, revisión de pull requests entre integrantes antes de mergear.
+Tablero de seguimiento: [GitHub Projects](https://github.com/users/SantiagoDandrea/projects/3).
 
 ## 2026-04-22 — Inicio
 Se conforma el grupo y se presenta la propuesta del TP: un e-commerce de colchonería, tecnología y electrodomésticos. Se toma como referencia el repositorio de la cátedra.
@@ -44,3 +45,5 @@ Se agrega el parámetro `allowPublicKeyRetrieval=true` a `DATABASE_URL` en `.env
 
 ## 2026-10-10 — Mejoras de modelo, tarifas de envío y seguridad
 Se integran varias mejoras en una sola PR ([PR #29](https://github.com/SantiagoDandrea/DSW-Backend/pull/29)). Al crear un pedido con envío se elige la zona de entrega (`LOCAL` o `NACIONAL`) y se aplica la tarifa fija correspondiente. Los detalles de un pedido que consume stock de varios almacenes se devuelven consolidados por producto, y el detalle por almacén se conserva en la base para reponer el stock exacto al cancelar. Los pedidos ya no pueden cancelarse desde `EN_PREPARACION`. Se agrega la desactivación de usuarios mediante el campo `activo`, y los usuarios inactivos no pueden iniciar sesión. El proveedor de un producto pasa a ser opcional.
+
+Ese mismo día se completa la baja de usuarios: `DELETE /usuarios/:dni` deja de borrar el registro y pasa a desactivarlo (`activo: false`). Así se puede dar de baja a un usuario con pedidos, algo que antes fallaba por la restricción de la base, y reactivarlo después desde la edición del usuario ([PR #31](https://github.com/SantiagoDandrea/DSW-Backend/pull/31)).
