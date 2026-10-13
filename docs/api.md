@@ -143,13 +143,15 @@ Body:
 
 ## PUT /usuarios/:dni
 
-Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad). Requiere rol `ADMIN`. El `dni` no se puede modificar por esta vía.
+Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad, `activo`). Requiere rol `ADMIN`. El `dni` no se puede modificar por esta vía.
 
 `password` es opcional: si se manda, se valida y se hashea de nuevo, reemplazando el hash guardado. Si no se manda, la contraseña actual no se toca.
 
 ## DELETE /usuarios/:dni
 
-Elimina un usuario. Requiere rol `ADMIN`. Falla con 409 si tiene pedidos asociados.
+Da de baja al usuario de forma lógica: no se borra, se marca `activo: false`. Requiere rol `ADMIN`. Responde 204, o 404 si el usuario no existe.
+
+El usuario conserva sus pedidos y sigue apareciendo en el listado, pero no puede iniciar sesión. Se reactiva con `PUT /usuarios/:dni` enviando `activo: true`.
 
 ---
 
@@ -182,7 +184,7 @@ Las operaciones de consulta (`GET`) del catálogo de productos e imágenes son p
 
 Listado de productos. (Público). Incluye categoría, marca, proveedor, precio vigente, disponibilidad e imágenes de cada uno.
 
-- `disponible`: booleano — `true` si hay stock en algún almacén. No expone la cantidad exacta ni el desglose por almacén, eso es información administrativa (ver módulo Stock).
+- `disponible`: booleano — `true` si hay stock en algún almacén. No expone el desglose por almacén, eso es información administrativa (ver módulo Stock).
 
 Filtros (query params, todos opcionales):
 
@@ -506,27 +508,9 @@ Respuesta (200):
         "descripcion": "Local Físico Central",
         "direccion": "Calle 20 Nro 500"
       },
-      "cantidad": 6,
+      "cantidad": 10,
       "precioUnitario": 100000,
-      "subtotal": 600000
-    },
-    {
-      "id": 2,
-      "productoId": 1,
-      "producto": {
-        "id": 1,
-        "nombre": "Taladro Percutor 750W",
-        "descripcion": "Taladro con velocidad variable y percutor"
-      },
-      "almacenId": 2,
-      "almacen": {
-        "id": 2,
-        "descripcion": "Depósito Industrial",
-        "direccion": "Ruta 178 Km 2"
-      },
-      "cantidad": 4,
-      "precioUnitario": 100000,
-      "subtotal": 400000
+      "subtotal": 1000000
     }
   ],
   "envio": {
@@ -540,6 +524,8 @@ Respuesta (200):
 }
 ```
 
+Los detalles se consolidan por producto: si un mismo producto se descontó de más de un almacén, la respuesta trae una sola línea con la cantidad y el subtotal sumados (en el ejemplo, 6 del Local + 4 del Depósito = 10). Los campos `almacenId` y `almacen` de esa línea corresponden al primer almacén de origen. El detalle por almacén se conserva internamente para devolver el stock exacto al cancelar.
+
 ## POST /pedidos
 
 Crea un pedido completo.
@@ -549,8 +535,8 @@ Crea un pedido completo.
 - Se utiliza el precio vigente de cada producto (`fechaDesde <= fecha actual`).
 - Se verifica el stock total disponible entre todos los almacenes (Local y Depósito). Si es suficiente, se descuenta de forma atómica y transaccional.
 - Si el pedido requiere envío:
-  - Dentro de Las Parejas: costo = $3.000.
-  - Fuera de Las Parejas: costo = $15.000.
+  - El costo es una tarifa fija según la zona de entrega: `LOCAL` (Las Parejas) = $3.000, `NACIONAL` (resto del país) = $15.000.
+  - La zona se indica con `envio.tipoEnvio` (`LOCAL` o `NACIONAL`). Opcionalmente se puede mandar `envio.localidad` (texto): si es "Las Parejas" se aplica la tarifa local, cualquier otra, la nacional. Si no se manda ninguno de los dos, se usa la localidad del perfil del usuario.
   - Se genera el registro de Envio (sin inventar fecha tentativa).
 - Si no requiere envío (retiro en local), no se genera Envio ni costo de flete.
 
@@ -567,6 +553,7 @@ Body:
   "medioPagoId": 1,
   "envio": {
     "requiereEnvio": true,
+    "tipoEnvio": "LOCAL",
     "domicilioEntrega": "Av. 25 de Mayo 123"
   }
 }
@@ -611,9 +598,10 @@ Actualiza el estado del pedido siguiendo la máquina de estados.
 - Transiciones permitidas:
   - `PENDIENTE` → `CONFIRMADO` o `CANCELADO`
   - `CONFIRMADO` → `EN_PREPARACION` o `CANCELADO`
-  - `EN_PREPARACION` → `ENVIADO` o `CANCELADO`
+  - `EN_PREPARACION` → `ENVIADO`
   - `ENVIADO` → `ENTREGADO`
 - No se permiten transiciones hacia atrás (409 Conflict).
+- Desde `EN_PREPARACION` en adelante el pedido ya no puede cancelarse (409 Conflict).
 - Si se pasa a `CANCELADO`, se revierte el stock automáticamente.
 
 Body:
@@ -635,8 +623,8 @@ Respuesta (200): Pedido actualizado.
 Cancela un pedido y revierte el stock descontado.
 - `CLIENTE` puede cancelar sus propios pedidos si están en estado cancelable.
 - `ADMIN` puede cancelar cualquier pedido cancelable.
-- Solo pueden cancelarse pedidos en estado `PENDIENTE`, `CONFIRMADO` o `EN_PREPARACION`.
-- Pedidos en estado `ENVIADO`, `ENTREGADO` o ya `CANCELADO` no pueden cancelarse (409 Conflict).
+- Solo pueden cancelarse pedidos en estado `PENDIENTE` o `CONFIRMADO`.
+- Pedidos en estado `EN_PREPARACION`, `ENVIADO`, `ENTREGADO` o ya `CANCELADO` no pueden cancelarse (409 Conflict).
 - **Reversión atómica de stock**: El stock se devuelve exactamente a los mismos almacenes de donde fue descontado originalmente.
 
 Respuesta (200): Pedido cancelado.
@@ -648,10 +636,11 @@ Respuesta (200): Pedido cancelado.
 ### Reglas generales y generación
 - **Generación**: El registro `Envio` se genera de manera automática y transaccional como parte de la creación del pedido (`POST /pedidos`) cuando se especifica `envio.requiereEnvio: true` y se proporciona `envio.domicilioEntrega`.
 - **Cuándo existe**: Si el pedido no requiere envío (retiro en local), **no** se genera ningún registro de `Envio`, el costo de envío es `$0` y el total del pedido equivale al subtotal de los productos.
-- **Cálculo del costo**: El costo pertenece exclusivamente al módulo de Envíos y se calcula automáticamente en el backend según la localidad del usuario asociado:
-  - **Las Parejas (Santa Fe)**: `$3.000`
-  - **Cualquier otra localidad (resto del país)**: `$15.000`
-  - El cliente **no** puede enviar arbitrariamente el costo del flete.
+- **Cálculo del costo**: El costo pertenece exclusivamente al módulo de Envíos y es una tarifa fija según la zona de entrega:
+  - **Local (Las Parejas, Santa Fe)**: `$3.000`
+  - **Nacional (resto del país)**: `$15.000`
+  - La zona se elige al crear el pedido con `envio.tipoEnvio` (`LOCAL` o `NACIONAL`); si no se indica, se determina por la localidad (`envio.localidad`, o la del perfil del usuario).
+  - El cliente **no** puede enviar un monto arbitrario de flete, solo elegir una de las dos tarifas fijas.
   - El total del pedido utiliza dicho costo: `subtotal + costoEnvio = total`.
 - **Fecha tentativa**: El campo `fechaTentativa` es opcional (`null`), ya que el sistema no realiza estimaciones automáticas de tiempos ni cálculo de rutas.
 
