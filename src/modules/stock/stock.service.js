@@ -12,6 +12,12 @@ function esRegistroNoEncontrado(err) {
   );
 }
 
+function esStockDuplicado(err) {
+  return (
+    err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002"
+  );
+}
+
 function esRestriccionDeIntegridad(err) {
   return (
     err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003"
@@ -75,6 +81,10 @@ export const stockService = {
     } catch (err) {
       if (esRegistroNoEncontrado(err)) {
         throw new NotFoundError(mensajeNoExiste(id));
+      }
+
+      if (esStockDuplicado(err)) {
+        throw new ConflictError(MENSAJE_STOCK_DUPLICADO);
       }
 
       if (esRestriccionDeIntegridad(err)) {

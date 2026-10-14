@@ -2,9 +2,16 @@ import { Prisma } from "@prisma/client";
 import { precioRepository } from "./precio.repository.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
+import { ValidationError } from "../../errors/ValidationError.js";
 
 const MENSAJE_PRECIO_DUPLICADO =
   "Ya existe un precio para ese producto con esa fechaDesde.";
+const MENSAJE_UNICO_PRECIO_VIGENTE =
+  "No se puede eliminar el único precio vigente del producto. Cargá otro precio que ya rija antes de eliminarlo.";
+const MENSAJE_UNICO_PRECIO_A_FUTURO =
+  "No se puede pasar a una fecha futura el único precio vigente del producto. Cargá otro precio que ya rija primero.";
+const MENSAJE_CAMBIO_PRODUCTO =
+  "No se puede cambiar el producto de un precio. Eliminalo y cargalo en el producto correcto.";
 
 function esErrorPrisma(err, codigo) {
   return (
@@ -37,6 +44,18 @@ async function asegurarCombinacionDisponible(id, productoId, fechaDesde) {
 
   if (precioExistente && precioExistente.id !== id) {
     throw new ConflictError(MENSAJE_PRECIO_DUPLICADO);
+  }
+}
+
+// Un precio que ya rige no puede dejar de regir si no queda otro que rija en su lugar
+async function asegurarQueQuedeOtroVigente(precio, mensaje) {
+  const otrosQueRigen = await precioRepository.contarPreciosQueRigenExcepto(
+    precio.productoId,
+    precio.id
+  );
+
+  if (otrosQueRigen === 0) {
+    throw new ConflictError(mensaje);
   }
 }
 
@@ -94,6 +113,15 @@ export const precioService = {
       throw new NotFoundError(mensajeNoExistePrecio(id));
     }
 
+    if (productoId !== precio.productoId) {
+      throw new ValidationError(MENSAJE_CAMBIO_PRODUCTO);
+    }
+
+    const ahora = new Date();
+    if (precio.fechaDesde <= ahora && fechaDesde > ahora) {
+      await asegurarQueQuedeOtroVigente(precio, MENSAJE_UNICO_PRECIO_A_FUTURO);
+    }
+
     await asegurarProductoExiste(productoId);
     await asegurarCombinacionDisponible(id, productoId, fechaDesde);
 
@@ -121,6 +149,16 @@ export const precioService = {
   },
 
   async eliminarPrecio(id) {
+    const precio = await precioRepository.obtenerPrecioPorId(id);
+
+    if (!precio) {
+      throw new NotFoundError(mensajeNoExistePrecio(id));
+    }
+
+    if (precio.fechaDesde <= new Date()) {
+      await asegurarQueQuedeOtroVigente(precio, MENSAJE_UNICO_PRECIO_VIGENTE);
+    }
+
     try {
       await precioRepository.eliminarPrecio(id);
     } catch (err) {

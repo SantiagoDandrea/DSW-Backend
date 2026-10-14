@@ -69,20 +69,20 @@ Todos los módulos tienen el mismo conjunto de archivos:
 ## 4. Manejo de errores
 
 - Las clases de error están en `src/errors/`: `ApiError` (base, con `statusCode`) y sus subclases `ValidationError` (400), `UnauthorizedError` (401), `ForbiddenError` (403), `NotFoundError` (404) y `ConflictError` (409).
-- `error.middleware.js` responde `{ "error": "<mensaje>" }` con el código de la excepción cuando es una `ApiError`; ante cualquier otro error registra el detalle en el servidor y responde 500 con un mensaje genérico.
+- `error.middleware.js` responde `{ "error": "<mensaje>" }` con el código de la excepción cuando es una `ApiError`, y 400 cuando el cuerpo no es un JSON válido; ante cualquier otro error registra el detalle en el servidor y responde 500 con un mensaje genérico.
 - `not-found.middleware.js` responde 404 a las rutas inexistentes.
 
 ## 5. Autenticación y autorización
 
 - Las contraseñas se guardan con bcrypt. El login devuelve un JWT válido por 24 horas, firmado con `JWT_SECRET`, con el DNI y el rol del usuario.
-- `authMiddleware` valida el token y deja el usuario en `req.usuario`. `requireRole(...)` restringe una ruta a ciertos roles.
+- `authMiddleware` valida el token y después consulta al usuario en la base: si no existe o está inactivo responde 401, y deja en `req.usuario` el DNI y el rol actuales de la base. Así, desactivar a un usuario o cambiarle el rol tiene efecto inmediato aunque su token siga vigente. `requireRole(...)` restringe una ruta a ciertos roles.
 - En los recursos que pertenecen a un cliente (pedidos y envíos), el service compara además el DNI del token con el dueño del recurso: un cliente solo accede a los propios, un `ADMIN` a todos.
 - Los usuarios tienen un campo `activo`: los inactivos no pueden iniciar sesión.
 - La tabla de acceso por módulo está en [api.md](api.md), sección "Roles y Autorizaciones".
 
 ## 6. Configuración
 
-Las variables de entorno se leen en `src/config/env.js`: `DATABASE_URL`, `JWT_SECRET` y `PORT` (opcional, por defecto 3000). `src/config/database.js` crea el cliente de Prisma con el adaptador de MariaDB, que Prisma 7 requiere para conectarse a MySQL. El archivo `.env.example` indica los valores esperados y `.env` no se versiona.
+Las variables de entorno se leen en `src/config/env.js`: `DATABASE_URL`, `JWT_SECRET` (obligatoria: sin ella el servidor no arranca) y `PORT` (opcional, por defecto 3000). `src/config/database.js` crea el cliente de Prisma con el adaptador de MariaDB, que Prisma 7 requiere para conectarse a MySQL. El archivo `.env.example` indica los valores esperados y `.env` no se versiona.
 
 ## 7. Modelo de datos
 
@@ -94,7 +94,7 @@ El modelo completo está en [`prisma/schema.prisma`](../prisma/schema.prisma). R
 - **Proveedor:** nombre, `cuit` (único) y teléfono.
 - **Producto:** nombre, descripción, categoría, marca y proveedor (opcional). No guarda su precio: el precio vigente sale del historial.
 - **ImagenProducto:** `url` y orden, asociadas a un producto.
-- **Precio:** `valor` y `fechaDesde` de un producto; la combinación producto + fecha es única. El precio vigente es el de `fechaDesde` más reciente que ya rige.
+- **Precio:** `valor` y `fechaDesde` de un producto; la combinación producto + fecha es única. El precio vigente es el de `fechaDesde` más reciente que ya rige. Un precio no puede cambiar de producto, y no se puede eliminar ni pasar a una fecha futura el único precio que rige, para que un producto nunca quede sin precio vigente.
 - **Almacen:** descripción y dirección.
 - **Stock:** `cantidad` de un producto en un almacén; la combinación producto + almacén es única, lo que evita dos registros del mismo producto en el mismo almacén.
 - **MedioPago:** descripción única (por ejemplo, efectivo, transferencia o tarjeta).

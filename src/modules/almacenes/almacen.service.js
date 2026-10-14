@@ -4,7 +4,7 @@ import { NotFoundError } from "../../errors/NotFoundError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
 
 const MENSAJE_STOCK_ASOCIADO =
-  "No se puede eliminar este almacén porque tiene stock asociado. Eliminá o reasigná ese stock primero.";
+  "No se puede eliminar este almacén porque tiene stock o pedidos asociados.";
 
 function esRegistroNoEncontrado(err) {
   return (

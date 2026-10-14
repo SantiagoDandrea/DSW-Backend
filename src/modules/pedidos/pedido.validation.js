@@ -99,9 +99,16 @@ export function validateCrearPedido(req, res, next) {
 
     let envioValidado = { requiereEnvio: false };
     if (envio && typeof envio === "object") {
-      const requiereEnvio = Boolean(envio.requiereEnvio);
+      if (
+        envio.requiereEnvio !== undefined &&
+        typeof envio.requiereEnvio !== "boolean"
+      ) {
+        throw new ValidationError(
+          "El campo 'requiereEnvio' debe ser true o false."
+        );
+      }
 
-      if (requiereEnvio) {
+      if (envio.requiereEnvio === true) {
         if (
           typeof envio.domicilioEntrega !== "string" ||
           envio.domicilioEntrega.trim().length === 0

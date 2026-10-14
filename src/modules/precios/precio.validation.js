@@ -14,7 +14,7 @@ function validarId(valor, nombreCampo) {
 }
 
 function validarValor(valor) {
-  return validarMontoMonetario(valor, "El valor", { permitirCero: true });
+  return validarMontoMonetario(valor, "El valor", { permitirCero: false });
 }
 
 function validarFecha(valor, nombreCampo = "fechaDesde") {
