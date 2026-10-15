@@ -50,9 +50,13 @@ Body:
   "email": "string",
   "password": "string",
   "telefono": "string",
-  "localidadId": 1
+  "provincia": "Santa Fe",
+  "localidad": "Rosario",
+  "codigoPostal": "2000"
 }
 ```
+
+> Nota: Por compatibilidad con clientes existentes o migraciones, también se admite enviar `"localidadId": 1` en lugar de la terna provincia/localidad/código postal.
 
 Respuesta (201):
 
@@ -64,7 +68,8 @@ Respuesta (201):
 ```
 
 - El rol se fuerza siempre a `CLIENTE` en el servidor — si se manda `rol` en el body, se ignora, no se puede crear una cuenta ADMIN por acá.
-- Mismas validaciones que `POST /usuarios` (dni, password, email único, localidadId existente), sin el campo `rol`.
+- Para la localidad se valida y procesa la combinación `{ provincia, localidad, codigoPostal }` (si la localidad no existe en la base, el sistema la crea dinámicamente) o bien un `localidadId` válido existente.
+- Mismas validaciones que `POST /usuarios` (dni, password, email único), sin el campo `rol`.
 
 ## POST /auth/logout
 
@@ -91,12 +96,16 @@ Body (los que se quieran actualizar):
   "apellido": "string",
   "email": "string",
   "telefono": "string",
+  "provincia": "Santa Fe",
+  "localidad": "Rosario",
+  "codigoPostal": "2000",
   "localidadId": 1,
   "password": "string"
 }
 ```
 
 - `rol` y `dni` no son editables por esta vía — si se mandan en el body, se ignoran.
+- Para actualizar la ubicación se puede enviar `{ provincia, localidad, codigoPostal }` (resolución/alta dinámica) o `localidadId`.
 - `password` es opcional: si no se manda, no se toca la actual.
 
 ---
@@ -109,7 +118,7 @@ Todos los endpoints de este módulo son administrativos y requieren autenticaci�
 
 ## GET /usuarios
 
-Listado de usuarios. Requiere rol `ADMIN`. Incluye la localidad resuelta (`{ id, nombre }`) de cada uno. La respuesta nunca incluye `password`.
+Listado de usuarios. Requiere rol `ADMIN`. Incluye la localidad resuelta (`{ id, nombre, provincia, codigoPostal }`) de cada uno. La respuesta nunca incluye `password`.
 
 Filtros (query params, todos opcionales):
 
@@ -119,7 +128,7 @@ Filtros (query params, todos opcionales):
 
 ## GET /usuarios/:dni
 
-Detalle de un usuario. Requiere rol `ADMIN`. Incluye la localidad resuelta. Nunca incluye `password`.
+Detalle de un usuario. Requiere rol `ADMIN`. Incluye la localidad resuelta (`{ id, nombre, provincia, codigoPostal }`). Nunca incluye `password`.
 
 ## POST /usuarios
 
