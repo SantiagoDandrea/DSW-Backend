@@ -4,6 +4,7 @@ import { usuarioRepository } from "./usuario.repository.js";
 import { localidadRepository } from "../localidades/localidad.repository.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
+import { ValidationError } from "../../errors/ValidationError.js";
 
 const SALT_ROUNDS = 10;
 
@@ -39,9 +40,37 @@ async function validarReferencias({ localidadId }) {
   }
 }
 
-export const usuarioService = {
-  async crearUsuario({ dni, nombre, apellido, email, password, telefono, rol, localidadId }) {
+async function resolverIdLocalidad({ localidadId, localidad, provincia, codigoPostal }) {
+  if (localidadId !== undefined && localidadId !== null && localidadId !== "") {
     await validarReferencias({ localidadId });
+    return Number(localidadId);
+  }
+
+  if (localidad && codigoPostal) {
+    const nombreNorm = localidad.trim();
+    const cpNorm = codigoPostal.trim();
+    const provNorm = (provincia || "").trim();
+
+    let existente = await localidadRepository.obtenerLocalidadPorNombreYCp(nombreNorm, cpNorm);
+    if (existente) {
+      return existente.id;
+    }
+
+    const nueva = await localidadRepository.crearLocalidad({
+      nombre: nombreNorm,
+      provincia: provNorm,
+      codigoPostal: cpNorm,
+    });
+
+    return nueva.id;
+  }
+
+  throw new ValidationError("Debe proporcionar la localidad y el código postal.");
+}
+
+export const usuarioService = {
+  async crearUsuario({ dni, nombre, apellido, email, password, telefono, rol, localidadId, localidad, provincia, codigoPostal }) {
+    const idLocalidadFinal = await resolverIdLocalidad({ localidadId, localidad, provincia, codigoPostal });
 
     const passHasheada = await bcrypt.hash(password, SALT_ROUNDS);
 
@@ -54,7 +83,7 @@ export const usuarioService = {
         password: passHasheada,
         telefono,
         rol,
-        localidadId,
+        localidadId: idLocalidadFinal,
       });
     } catch (err) {
       manejarErrorDuplicado(err);
@@ -76,10 +105,10 @@ export const usuarioService = {
     return usuarioRepository.obtenerUsuarios(filtros);
   },
 
-  async actualizarUsuario(dni, { nombre, apellido, email, telefono, rol, localidadId, password, activo }) {
-    await validarReferencias({ localidadId });
+  async actualizarUsuario(dni, { nombre, apellido, email, telefono, rol, localidadId, localidad, provincia, codigoPostal, password, activo }) {
+    const idLocalidadFinal = await resolverIdLocalidad({ localidadId, localidad, provincia, codigoPostal });
 
-    const datos = { nombre, apellido, email, telefono, rol, localidadId };
+    const datos = { nombre, apellido, email, telefono, rol, localidadId: idLocalidadFinal };
     if (activo !== undefined) datos.activo = activo;
 
     if (password !== undefined) {

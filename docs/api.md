@@ -50,9 +50,13 @@ Body:
   "email": "string",
   "password": "string",
   "telefono": "string",
-  "localidadId": 1
+  "provincia": "Santa Fe",
+  "localidad": "Rosario",
+  "codigoPostal": "2000"
 }
 ```
+
+> Nota: Por compatibilidad con clientes existentes o migraciones, también se admite enviar `"localidadId": 1` en lugar de la terna provincia/localidad/código postal.
 
 Respuesta (201):
 
@@ -64,7 +68,8 @@ Respuesta (201):
 ```
 
 - El rol se fuerza siempre a `CLIENTE` en el servidor — si se manda `rol` en el body, se ignora, no se puede crear una cuenta ADMIN por acá.
-- Mismas validaciones que `POST /usuarios` (dni, password, email único, localidadId existente), sin el campo `rol`.
+- Para la localidad se valida y procesa la combinación `{ provincia, localidad, codigoPostal }` (si la localidad no existe en la base, el sistema la crea dinámicamente) o bien un `localidadId` válido existente.
+- Mismas validaciones que `POST /usuarios` (dni, password, email único), sin el campo `rol`.
 
 ## POST /auth/logout
 
@@ -91,12 +96,16 @@ Body (los que se quieran actualizar):
   "apellido": "string",
   "email": "string",
   "telefono": "string",
+  "provincia": "Santa Fe",
+  "localidad": "Rosario",
+  "codigoPostal": "2000",
   "localidadId": 1,
   "password": "string"
 }
 ```
 
 - `rol` y `dni` no son editables por esta vía — si se mandan en el body, se ignoran.
+- Para actualizar la ubicación se puede enviar `{ provincia, localidad, codigoPostal }` (resolución/alta dinámica) o `localidadId`.
 - `password` es opcional: si no se manda, no se toca la actual.
 
 ---
@@ -109,17 +118,41 @@ Todos los endpoints de este módulo son administrativos y requieren autenticaci�
 
 ## GET /usuarios
 
-Listado de usuarios. Requiere rol `ADMIN`. Incluye la localidad resuelta (`{ id, nombre }`) de cada uno. La respuesta nunca incluye `password`.
+Listado de usuarios. Requiere rol `ADMIN`. Incluye la localidad resuelta (`{ id, nombre, provincia, codigoPostal }`) de cada uno. La respuesta nunca incluye `password`.
 
 Filtros (query params, todos opcionales):
 
-- nombre (búsqueda parcial)
-- apellido (búsqueda parcial)
-- rol (`ADMIN` o `CLIENTE`)
+- `nombre` (búsqueda parcial)
+- `apellido` (búsqueda parcial)
+- `rol` (`ADMIN` o `CLIENTE`)
+
+Respuesta (200):
+
+```json
+[
+  {
+    "dni": "30111222",
+    "nombre": "Carlos",
+    "apellido": "Perez",
+    "email": "carlos@test.com",
+    "telefono": "3471112233",
+    "activo": true,
+    "rol": "CLIENTE",
+    "localidad": {
+      "id": 1,
+      "nombre": "Rosario",
+      "provincia": "Santa Fe",
+      "codigoPostal": "2000"
+    }
+  }
+]
+```
 
 ## GET /usuarios/:dni
 
-Detalle de un usuario. Requiere rol `ADMIN`. Incluye la localidad resuelta. Nunca incluye `password`.
+Detalle de un usuario por su DNI. Requiere rol `ADMIN`. Incluye la localidad resuelta y nunca incluye `password`.
+
+Respuesta (200): Mismo formato de objeto que en el listado.
 
 ## POST /usuarios
 
@@ -136,47 +169,130 @@ Body:
   "password": "string",
   "telefono": "string",
   "rol": "ADMIN | CLIENTE",
-  "localidadId": 1
+  "provincia": "Santa Fe",
+  "localidad": "Rosario",
+  "codigoPostal": "2000"
 }
 ```
 
-- `dni` es la clave primaria (no autoincremental): 7 u 8 dígitos numéricos, lo define el cliente.
-- `password`: mínimo 8 caracteres, al menos una mayúscula, una minúscula y un número. Se guarda hasheado (bcrypt) — nunca se persiste ni se devuelve en texto plano.
-- `email` debe ser único (409 si ya existe otro usuario con ese email).
-- `localidadId` debe existir (404 si no).
+> Nota: Se puede enviar la terna `{ provincia, localidad, codigoPostal }` (resolución/alta dinámica) o `"localidadId": 1`.
+
+- `dni`: 7 u 8 dígitos numéricos, clave primaria definida por el cliente.
+- `password`: mínimo 8 caracteres, al menos una mayúscula, una minúscula y un número. Se almacena hasheada con bcrypt.
+- `email`: debe ser único (409 si ya existe otro usuario con ese email).
+- `rol`: `ADMIN` o `CLIENTE`.
+
+Respuesta (201): Objeto de usuario creado (sin `password`).
 
 ## PUT /usuarios/:dni
 
-Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad, `activo`). Requiere rol `ADMIN`. El `dni` no se puede modificar por esta vía.
+Actualiza los datos del usuario (nombre, apellido, email, teléfono, rol, localidad, `activo`). Requiere rol `ADMIN`. El `dni` no es modificable.
 
-`password` es opcional: si se manda, se valida y se hashea de nuevo, reemplazando el hash guardado. Si no se manda, la contraseña actual no se toca.
+Body (campos que se deseen actualizar):
+
+```json
+{
+  "nombre": "string",
+  "apellido": "string",
+  "email": "string",
+  "telefono": "string",
+  "rol": "ADMIN | CLIENTE",
+  "provincia": "Santa Fe",
+  "localidad": "Rosario",
+  "codigoPostal": "2000",
+  "localidadId": 1,
+  "activo": true,
+  "password": "string"
+}
+```
+
+- `password` es opcional: si se envía, se valida y hashea nuevamente, reemplazando la actual.
+- `activo`: booleano (`true` o `false`). Permite reactivar un usuario desactivado previamente.
+
+Respuesta (200): Objeto de usuario actualizado.
 
 ## DELETE /usuarios/:dni
 
-Da de baja al usuario de forma lógica: no se borra, se marca `activo: false`. Requiere rol `ADMIN`. Responde 204, o 404 si el usuario no existe.
+Da de baja al usuario de forma lógica: no se borra de la base, se marca `activo: false`. Requiere rol `ADMIN`.
 
-El usuario conserva sus pedidos y sigue apareciendo en el listado, pero no puede iniciar sesión. Se reactiva con `PUT /usuarios/:dni` enviando `activo: true`.
+Respuesta (204 No Content), o 404 si el usuario no existe.
+
+El usuario conserva sus pedidos históricos y sigue apareciendo en el listado administrativo, pero queda impedido de iniciar sesión. Puede reactivarse con `PUT /usuarios/:dni` enviando `activo: true`.
 
 ---
 
 # Localidades
 
-Las operaciones de consulta (`GET`) son públicas para permitir la navegación y selección de localidades. Las operaciones de modificación (`POST`, `PUT`, `DELETE`) requieren rol `ADMIN`.
+Las operaciones de consulta (`GET`) son públicas para permitir la selección de localidades y cotización de envíos. Las operaciones de modificación (`POST`, `PUT`, `DELETE`) requieren rol `ADMIN`.
 
 ## GET /localidades
-Obtiene todas las localidades. (Público)
+
+Obtiene el listado de todas las localidades registradas. (Público).
+
+Respuesta (200):
+
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Las Parejas",
+    "codigoPostal": "2505",
+    "provincia": "Santa Fe"
+  }
+]
+```
 
 ## GET /localidades/:id
-Obtiene una localidad. (Público)
+
+Obtiene el detalle de una localidad por su ID. (Público).
+
+Respuesta (200):
+
+```json
+{
+  "id": 1,
+  "nombre": "Las Parejas",
+  "codigoPostal": "2505",
+  "provincia": "Santa Fe"
+}
+```
 
 ## POST /localidades
-Crea una localidad. (Requiere `ADMIN`)
+
+Crea una nueva localidad. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "nombre": "Rosario",
+  "codigoPostal": "2000",
+  "provincia": "Santa Fe"
+}
+```
+
+- `nombre`: texto obligatorio, no vacío.
+- `codigoPostal`: texto obligatorio, no vacío.
+- `provincia`: texto obligatorio, debe pertenecer al catálogo oficial de las 24 provincias argentinas (ej. "Santa Fe", "Buenos Aires", "Córdoba", etc.).
+- Restricción de unicidad: la combinación `(nombre, codigoPostal)` debe ser única en el sistema. Si ya existe, responde 409 Conflict.
+
+Respuesta (201): Objeto de la localidad creada con su `id`.
 
 ## PUT /localidades/:id
-Actualiza una localidad. (Requiere `ADMIN`)
+
+Actualiza los datos de una localidad existente. Requiere rol `ADMIN`.
+
+Mismo body y validaciones que `POST /localidades`. Si la combinación `(nombre, codigoPostal)` resultante ya pertenece a otra localidad, responde 409 Conflict.
+
+Respuesta (200): Objeto de la localidad actualizado.
 
 ## DELETE /localidades/:id
-Elimina una localidad. (Requiere `ADMIN`)
+
+Elimina una localidad. Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
+
+- Falla con 409 Conflict si la localidad tiene usuarios o pedidos/envíos asociados.
 
 ---
 
@@ -186,27 +302,89 @@ Las operaciones de consulta (`GET`) del catálogo de productos e imágenes son p
 
 ## GET /productos
 
-Listado de productos. (Público). Incluye categoría, marca, proveedor, precio vigente, disponibilidad e imágenes de cada uno.
-
-- `disponible`: booleano — `true` si hay stock en algún almacén. No expone el desglose por almacén, eso es información administrativa (ver módulo Stock).
+Listado de productos para el catálogo comercial. (Público). Incluye categoría, marca, proveedor (si posee), precio actual vigente, cálculo de disponibilidad (`disponible`), conteo consolidado de unidades (`stockDisponible`) y galería de imágenes.
 
 Filtros (query params, todos opcionales):
 
-- categoriaId
-- marcaId
-- nombre (búsqueda parcial)
-- precioMin
-- precioMax (filtran sobre el precio vigente)
+- `categoriaId`: número entero positivo.
+- `marcaId`: número entero positivo.
+- `nombre`: texto (búsqueda parcial insensible a mayúsculas).
+- `precioMin`: número mayor o igual a 0.
+- `precioMax`: número mayor o igual a 0 (debe ser mayor o igual que `precioMin`).
+
+Respuesta (200):
+
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Colchón Espuma Alta Densidad 2 Plazas",
+    "descripcion": "Colchón de espuma de alta densidad (30 kg/m³) con tela de punto.",
+    "categoria": {
+      "id": 1,
+      "nombre": "Colchones"
+    },
+    "marca": {
+      "id": 1,
+      "nombre": "Piero"
+    },
+    "proveedor": {
+      "id": 1,
+      "nombre": "Distribuidora Confort S.A."
+    },
+    "precioActual": 250000,
+    "disponible": true,
+    "stockDisponible": 15,
+    "imagenes": [
+      {
+        "id": 1,
+        "url": "https://example.com/imagen1.jpg",
+        "orden": 1
+      }
+    ]
+  }
+]
+```
+
+- `precioActual`: número con el valor vigente, o `null` si aún no tiene precio asignado.
+- `disponible`: booleano (`true` si `stockDisponible > 0`).
+- `stockDisponible`: cantidad total de unidades sumando todos los almacenes. No expone el desglose por almacén (información exclusiva de `ADMIN` en el módulo Stock).
+- `proveedor`: `{ id, nombre }` o `null` si no tiene proveedor asignado.
 
 ## GET /productos/:id
 
-Detalle del producto. (Público). Incluye categoría, marca, proveedor, precio vigente, disponibilidad e imágenes (mismo campo `disponible` que en el listado).
+Detalle completo de un producto por su ID. (Público). Mismo formato y campos calculados que en el listado.
 
-Nota: el desglose de stock por almacén es información administrativa, no se expone acá — ver módulo Stock.
+Respuesta (200): Objeto de producto.
 
 ## POST /productos
 
-Crea un producto junto con su primer precio, en una sola operación atómica. Requiere rol `ADMIN`.
+Crea un producto junto con su precio inicial en una única operación atómica transaccional. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "nombre": "Colchón Espuma Alta Densidad 2 Plazas",
+  "descripcion": "Colchón de espuma de alta densidad (30 kg/m³)",
+  "categoriaId": 1,
+  "marcaId": 1,
+  "proveedorId": 1,
+  "precio": 250000
+}
+```
+
+- `nombre` y `descripcion`: obligatorios, textos no vacíos.
+- `categoriaId`: entero positivo de una categoría existente (404 si no existe).
+- `marcaId`: entero positivo de una marca existente (404 si no existe).
+- `proveedorId`: entero positivo de un proveedor existente, o `null`/omitido (opcional).
+- `precio`: número positivo mayor a 0 con hasta 2 decimales (crea el precio inicial vigente desde la fecha actual).
+
+Respuesta (201): Objeto de producto creado con `precioActual` asignado.
+
+## PUT /productos/:id
+
+Actualiza los atributos informativos del producto (nombre, descripción, categoría, marca, proveedor). Requiere rol `ADMIN`.
 
 Body:
 
@@ -216,20 +394,22 @@ Body:
   "descripcion": "string",
   "categoriaId": 1,
   "marcaId": 1,
-  "proveedorId": 1,
-  "precio": 199.99
+  "proveedorId": 1
 }
 ```
 
-`categoriaId`, `marcaId` y `proveedorId` deben existir (404 si no).
+- `proveedorId`: opcional (puede enviarse `null` para desasociar el proveedor).
+- No modifica el precio: para alterar precios vigentes o cargar nuevos se utiliza el módulo Precios (`POST /precios`).
 
-## PUT /productos/:id
-
-Actualiza los datos del producto (nombre, descripción, categoría, marca, proveedor). Requiere rol `ADMIN`. No modifica el precio — para eso usar el endpoint de precios.
+Respuesta (200): Objeto de producto actualizado.
 
 ## DELETE /productos/:id
 
-Elimina un producto. Requiere rol `ADMIN`. Falla con 409 si tiene stock o pedidos asociados.
+Elimina un producto. Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
+
+- Falla con 409 Conflict si el producto posee registros de stock o pedidos asociados.
 
 ---
 
@@ -245,13 +425,28 @@ Obtiene todos los precios registrados. Requiere rol `ADMIN`.
 
 Filtros (query params, todos opcionales):
 
-- productoId
-- fechaDesde
-- fechaHasta
+- `productoId`: número entero positivo.
+- `fechaDesde`: fecha/hora mínima en formato ISO.
+- `fechaHasta`: fecha/hora máxima en formato ISO.
+
+Respuesta (200):
+
+```json
+[
+  {
+    "id": 1,
+    "productoId": 1,
+    "valor": 199.99,
+    "fechaDesde": "2026-09-02T00:00:00.000Z"
+  }
+]
+```
 
 ### GET /precios/:id
 
-Obtiene un precio. Requiere rol `ADMIN`.
+Obtiene un precio por su ID. Requiere rol `ADMIN`.
+
+Respuesta (200): Objeto de precio con su valor y fechaDesde.
 
 ### POST /precios
 
@@ -267,11 +462,11 @@ Body:
 }
 ```
 
-productoId debe corresponder a un producto existente.
+- `productoId`: debe corresponder a un producto existente.
+- `valor`: debe ser mayor a 0, con hasta dos decimales.
+- No puede existir más de un precio para el mismo producto con la misma fechaDesde (409 Conflict).
 
-`valor` debe ser mayor a 0, con hasta dos decimales.
-
-No puede existir más de un precio para el mismo producto con la misma fechaDesde.
+Respuesta (201): Objeto de precio creado.
 
 ### PUT /precios/:id
 
@@ -280,16 +475,21 @@ Actualiza el valor o la fecha de vigencia de un precio. Requiere rol `ADMIN`. Mi
 - El producto de un precio no se puede cambiar: si `productoId` es distinto del actual, responde 400. Para corregirlo, se elimina el precio y se carga en el producto correcto.
 - Si el precio ya rige y se lo pasa a una fecha futura, debe quedar otro precio que rija en su lugar; si no, responde 409. Así un producto nunca queda sin precio vigente.
 
+Respuesta (200): Objeto de precio actualizado.
+
 ### DELETE /precios/:id
 
 Elimina un precio. Requiere rol `ADMIN`.
 
 - Un precio que ya rige solo se puede eliminar si queda otro que rija en su lugar (el anterior pasa a ser el vigente); si es el único, responde 409. Los precios con fecha futura se pueden eliminar siempre.
 
+Respuesta (204 No Content).
+
 ### GET /productos/:id/precios
 
-Obtiene el historial de precios del producto, ordenado por fechaDesde de forma descendente. Requiere rol `ADMIN`.
+Obtiene el historial completo de precios del producto indicado, ordenado por fechaDesde de forma descendente. Requiere rol `ADMIN`.
 
+Respuesta (200): Listado de precios históricos del producto.
 
 ---
 
@@ -297,47 +497,187 @@ Obtiene el historial de precios del producto, ordenado por fechaDesde de forma d
 
 ### GET /productos/:id/imagenes
 
-Obtiene todas las imágenes del producto. (Público).
+Obtiene todas las imágenes asociadas al producto. (Público).
+
+Respuesta (200):
+
+```json
+[
+  {
+    "id": 1,
+    "url": "https://example.com/imagen1.jpg",
+    "orden": 1
+  }
+]
+```
 
 ### POST /productos/:id/imagenes
 
-Agrega una imagen (`{ "url": string, "orden"?: number }`). Requiere rol `ADMIN`.
+Agrega una imagen a la galería de un producto. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "url": "https://example.com/imagen1.jpg",
+  "orden": 1
+}
+```
+
+- `url`: obligatoria, texto no vacío. Debe comenzar obligatoriamente con `http://` o `https://`.
+- `orden`: opcional (entero mayor o igual a 0, o `null`).
+
+Respuesta (201): Objeto de imagen creada con su `id`.
 
 ### DELETE /productos/imagenes/:id
 
-Elimina una imagen por su propio id (no requiere el id del producto). Requiere rol `ADMIN`.
+Elimina una imagen por su propio id (no requiere el id del producto en la URL). Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
 
 ---
 
 # Categorías
 
-Las operaciones de consulta son públicas. Las operaciones de escritura requieren rol `ADMIN`.
+Las operaciones de consulta son públicas para el catálogo. Las operaciones de escritura requieren rol `ADMIN`.
 
-## GET /categorias (Público)
+## GET /categorias
 
-## GET /categorias/:id (Público)
+Obtiene el listado de todas las categorías disponibles. (Público).
 
-## POST /categorias (Requiere `ADMIN`)
+Respuesta (200):
 
-## PUT /categorias/:id (Requiere `ADMIN`)
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Colchonería"
+  }
+]
+```
 
-## DELETE /categorias/:id (Requiere `ADMIN`)
+## GET /categorias/:id
+
+Obtiene una categoría por su ID. (Público).
+
+Respuesta (200):
+
+```json
+{
+  "id": 1,
+  "nombre": "Colchonería"
+}
+```
+
+## POST /categorias
+
+Crea una nueva categoría. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "nombre": "Electrodomésticos"
+}
+```
+
+- `nombre`: obligatorio, texto no vacío.
+
+Respuesta (201): Objeto de la categoría creada con su `id`.
+
+## PUT /categorias/:id
+
+Actualiza el nombre de una categoría existente. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "nombre": "Tecnología y Audio"
+}
+```
+
+Respuesta (200): Objeto de la categoría actualizado.
+
+## DELETE /categorias/:id
+
+Elimina una categoría. Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
+
+- Falla con 409 Conflict si la categoría tiene productos asociados.
 
 ---
 
 # Marcas
 
-Las operaciones de consulta son públicas. Las operaciones de escritura requieren rol `ADMIN`.
+Las operaciones de consulta son públicas para el catálogo. Las operaciones de escritura requieren rol `ADMIN`.
 
-## GET /marcas (Público)
+## GET /marcas
 
-## GET /marcas/:id (Público)
+Obtiene el listado de todas las marcas registradas. (Público).
 
-## POST /marcas (Requiere `ADMIN`)
+Respuesta (200):
 
-## PUT /marcas/:id (Requiere `ADMIN`)
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Piero"
+  }
+]
+```
 
-## DELETE /marcas/:id (Requiere `ADMIN`)
+## GET /marcas/:id
+
+Obtiene una marca por su ID. (Público).
+
+Respuesta (200):
+
+```json
+{
+  "id": 1,
+  "nombre": "Piero"
+}
+```
+
+## POST /marcas
+
+Crea una nueva marca. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "nombre": "Samsung"
+}
+```
+
+- `nombre`: obligatorio, texto no vacío.
+
+Respuesta (201): Objeto de la marca creada con su `id`.
+
+## PUT /marcas/:id
+
+Actualiza el nombre de una marca existente. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "nombre": "Samsung Electronics"
+}
+```
+
+Respuesta (200): Objeto de la marca actualizado.
+
+## DELETE /marcas/:id
+
+Elimina una marca. Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
+
+- Falla con 409 Conflict si la marca tiene productos asociados.
 
 ---
 
@@ -345,15 +685,64 @@ Las operaciones de consulta son públicas. Las operaciones de escritura requiere
 
 Todos los endpoints de este módulo son administrativos y requieren autenticación con rol `ADMIN`.
 
-## GET /proveedores (Requiere `ADMIN`)
+## GET /proveedores
 
-## GET /proveedores/:id (Requiere `ADMIN`)
+Listado de proveedores registrados. Requiere rol `ADMIN`.
 
-## POST /proveedores (Requiere `ADMIN`)
+Respuesta (200):
 
-## PUT /proveedores/:id (Requiere `ADMIN`)
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Distribuidora Confort S.A.",
+    "cuit": "30-11223344-5",
+    "telefono": "011-4567-8900"
+  }
+]
+```
 
-## DELETE /proveedores/:id (Requiere `ADMIN`)
+## GET /proveedores/:id
+
+Detalle de un proveedor por su ID. Requiere rol `ADMIN`.
+
+Respuesta (200): Objeto de proveedor.
+
+## POST /proveedores
+
+Crea un nuevo proveedor. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "nombre": "Distribuidora Confort S.A.",
+  "cuit": "30-11223344-5",
+  "telefono": "011-4567-8900"
+}
+```
+
+- `nombre`: obligatorio, texto no vacío.
+- `cuit`: obligatorio, texto no vacío con formato exacto `XX-XXXXXXXX-X` (dos dígitos, guion, ocho dígitos, guion, un dígito).
+- `telefono`: obligatorio, texto no vacío.
+
+Respuesta (201): Objeto del proveedor creado con su `id`.
+
+## PUT /proveedores/:id
+
+Actualiza los datos de un proveedor existente. Requiere rol `ADMIN`.
+
+Mismo body y validaciones que `POST /proveedores`.
+
+Respuesta (200): Objeto de proveedor actualizado.
+
+## DELETE /proveedores/:id
+
+Elimina un proveedor. Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
+
+- Falla con 409 Conflict si el proveedor tiene productos asociados.
 
 ---
 
@@ -361,30 +750,72 @@ Todos los endpoints de este módulo son administrativos y requieren autenticaci�
 
 Todos los endpoints de stock son administrativos y requieren autenticación con rol `ADMIN`.
 
-## GET /stock (Requiere `ADMIN`)
+## GET /stock
 
-Consulta el stock.
+Consulta el stock de productos por almacén. Requiere rol `ADMIN`.
 
-Filtros:
+Filtros (query params, todos opcionales):
 
-- producto
-- almacén
+- `productoId`: número entero positivo.
+- `almacenId`: número entero positivo.
 
-## GET /stock/:id (Requiere `ADMIN`)
+Respuesta (200):
 
-Detalle del registro de stock.
+```json
+[
+  {
+    "id": 1,
+    "productoId": 1,
+    "almacenId": 1,
+    "cantidad": 25
+  }
+]
+```
 
-## POST /stock (Requiere `ADMIN`)
+## GET /stock/:id
 
-Registra stock.
+Detalle de un registro de stock por su ID. Requiere rol `ADMIN`.
 
-## PUT /stock/:id (Requiere `ADMIN`)
+Respuesta (200): Objeto de stock.
 
-Actualiza stock. Si el par producto + almacén resultante ya tiene otro registro de stock, responde 409.
+## POST /stock
 
-## DELETE /stock/:id (Requiere `ADMIN`)
+Registra stock para un producto en un almacén. Requiere rol `ADMIN`.
 
-Elimina un registro de stock.
+Body:
+
+```json
+{
+  "productoId": 1,
+  "almacenId": 1,
+  "cantidad": 25
+}
+```
+
+- `productoId`: entero positivo de un producto existente (404 si no existe).
+- `almacenId`: entero positivo de un almacén existente (404 si no existe).
+- `cantidad`: número entero mayor o igual a 0.
+- Si el par `(productoId, almacenId)` ya posee un registro de stock en la base, responde 409 Conflict.
+
+Respuesta (201): Objeto de stock creado con su `id`.
+
+## PUT /stock/:id
+
+Actualiza la cantidad, producto o almacén de un registro de stock. Requiere rol `ADMIN`.
+
+Mismo body y validaciones que `POST /stock`.
+
+- Si la actualización causara un par `(productoId, almacenId)` ya existente en otro registro, responde 409 Conflict.
+
+Respuesta (200): Objeto de stock actualizado.
+
+## DELETE /stock/:id
+
+Elimina un registro de stock. Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
+
+- Falla con 409 Conflict si el registro está comprometido en pedidos o dependencias de integridad.
 
 ---
 
@@ -392,17 +823,60 @@ Elimina un registro de stock.
 
 Todos los endpoints de almacenes son administrativos y requieren autenticación con rol `ADMIN`.
 
-## GET /almacenes (Requiere `ADMIN`)
+## GET /almacenes
 
-## GET /almacenes/:id (Requiere `ADMIN`)
+Listado de almacenes o sucursales físicas. Requiere rol `ADMIN`.
 
-## POST /almacenes (Requiere `ADMIN`)
+Respuesta (200):
 
-## PUT /almacenes/:id (Requiere `ADMIN`)
+```json
+[
+  {
+    "id": 1,
+    "descripcion": "Local Físico Central",
+    "direccion": "Calle 20 Nro 500"
+  }
+]
+```
 
-## DELETE /almacenes/:id (Requiere `ADMIN`)
+## GET /almacenes/:id
 
-Falla con 409 si el almacén tiene stock o pedidos asociados.
+Detalle de un almacén por su ID. Requiere rol `ADMIN`.
+
+Respuesta (200): Objeto de almacén.
+
+## POST /almacenes
+
+Crea un nuevo almacén. Requiere rol `ADMIN`.
+
+Body:
+
+```json
+{
+  "descripcion": "Local Físico Central",
+  "direccion": "Calle 20 Nro 500"
+}
+```
+
+- `descripcion` y `direccion`: obligatorios, textos no vacíos.
+
+Respuesta (201): Objeto de almacén creado con su `id`.
+
+## PUT /almacenes/:id
+
+Actualiza los datos de un almacén. Requiere rol `ADMIN`.
+
+Mismo body y validaciones que `POST /almacenes`.
+
+Respuesta (200): Objeto de almacén actualizado.
+
+## DELETE /almacenes/:id
+
+Elimina un almacén. Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
+
+- Falla con 409 Conflict si el almacén tiene stock o pedidos asociados.
 
 ---
 
@@ -410,25 +884,58 @@ Falla con 409 si el almacén tiene stock o pedidos asociados.
 
 Las operaciones de consulta (`GET`) son públicas para que los clientes puedan seleccionar un medio de pago al realizar un pedido. Las operaciones de escritura requieren rol `ADMIN`.
 
-## GET /medios-pago (Público)
+## GET /medios-pago
 
-Obtiene los medios de pago disponibles.
+Obtiene los medios de pago disponibles. (Público).
 
-## GET /medios-pago/:id (Público)
+Respuesta (200):
 
-Obtiene un medio de pago.
+```json
+[
+  {
+    "id": 1,
+    "descripcion": "Transferencia Bancaria"
+  }
+]
+```
 
-## POST /medios-pago (Requiere `ADMIN`)
+## GET /medios-pago/:id
 
-Crea un medio de pago.
+Obtiene el detalle de un medio de pago por su ID. (Público).
 
-## PUT /medios-pago/:id (Requiere `ADMIN`)
+Respuesta (200): Objeto de medio de pago.
 
-Actualiza un medio de pago.
+## POST /medios-pago
 
-## DELETE /medios-pago/:id (Requiere `ADMIN`)
+Crea un medio de pago. Requiere rol `ADMIN`.
 
-Elimina un medio de pago.
+Body:
+
+```json
+{
+  "descripcion": "Transferencia Bancaria"
+}
+```
+
+- `descripcion`: obligatoria, texto no vacío.
+
+Respuesta (201): Objeto de medio de pago creado con su `id`.
+
+## PUT /medios-pago/:id
+
+Actualiza la descripción de un medio de pago. Requiere rol `ADMIN`.
+
+Mismo body y validación que `POST /medios-pago`.
+
+Respuesta (200): Objeto de medio de pago actualizado.
+
+## DELETE /medios-pago/:id
+
+Elimina un medio de pago. Requiere rol `ADMIN`.
+
+Respuesta (204 No Content).
+
+- Falla con 409 Conflict si el medio de pago está asociado a pedidos existentes.
 
 ---
 
