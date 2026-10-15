@@ -7,7 +7,14 @@ export function mapUsuario(usuario) {
     telefono: usuario.telefono,
     activo: usuario.activo,
     rol: usuario.rol,
-    localidad: { id: usuario.localidad.id, nombre: usuario.localidad.nombre },
+    localidad: usuario.localidad
+      ? {
+          id: usuario.localidad.id,
+          nombre: usuario.localidad.nombre,
+          provincia: usuario.localidad.provincia,
+          codigoPostal: usuario.localidad.codigoPostal,
+        }
+      : null,
   };
 }
 

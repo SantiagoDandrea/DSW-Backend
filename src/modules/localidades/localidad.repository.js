@@ -19,6 +19,15 @@ export const localidadRepository = {
     return prisma.localidad.update({ where: { id }, data });
   },
 
+  obtenerLocalidadPorNombreYCp(nombre, codigoPostal) {
+    return prisma.localidad.findFirst({
+      where: {
+        nombre: { equals: nombre },
+        codigoPostal: { equals: codigoPostal },
+      },
+    });
+  },
+
   eliminarLocalidad(id) {
     return prisma.localidad.delete({ where: { id } });
   },

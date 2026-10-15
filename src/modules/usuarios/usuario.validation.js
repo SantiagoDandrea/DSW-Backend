@@ -159,11 +159,20 @@ function validarDatosRegistro(body) {
   const apellido = validarTexto(body.apellido, "apellido");
   const email = validarEmail(body.email);
   const telefono = validarTexto(body.telefono, "telefono");
-  const localidadId = validarIdReferencia(body.localidadId, "localidadId");
   const password = validarPassword(body.password);
 
+  const datos = { dni, nombre, apellido, email, telefono, password, rol: "CLIENTE" };
+
+  if (body.localidadId !== undefined && body.localidadId !== null && body.localidadId !== "") {
+    datos.localidadId = validarIdReferencia(body.localidadId, "localidadId");
+  } else {
+    datos.provincia = validarTexto(body.provincia, "provincia");
+    datos.localidad = validarTexto(body.localidad, "localidad");
+    datos.codigoPostal = validarTexto(body.codigoPostal, "codigoPostal");
+  }
+
   // El registro público siempre crea un CLIENTE, "rol" nunca se acepta del body
-  return { dni, nombre, apellido, email, telefono, localidadId, password, rol: "CLIENTE" };
+  return datos;
 }
 
 export function validateRegistro(req, res, next) {
@@ -180,9 +189,19 @@ function validarDatosActualizacionPropia(body) {
   const apellido = validarTexto(body.apellido, "apellido");
   const email = validarEmail(body.email);
   const telefono = validarTexto(body.telefono, "telefono");
-  const localidadId = validarIdReferencia(body.localidadId, "localidadId");
 
-  const datos = { nombre, apellido, email, telefono, localidadId };
+  const datos = { nombre, apellido, email, telefono };
+
+  if (body.localidadId !== undefined && body.localidadId !== null && body.localidadId !== "") {
+    datos.localidadId = validarIdReferencia(body.localidadId, "localidadId");
+  } else if (body.localidad !== undefined || body.provincia !== undefined || body.codigoPostal !== undefined) {
+    datos.provincia = validarTexto(body.provincia, "provincia");
+    datos.localidad = validarTexto(body.localidad, "localidad");
+    datos.codigoPostal = validarTexto(body.codigoPostal, "codigoPostal");
+  } else {
+    throw new ValidationError("Debe proporcionar la localidad o localidadId.");
+  }
+
   return datos;
 }
 
