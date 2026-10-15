@@ -20,6 +20,11 @@ export const app = express();
 
 app.use(cors());
 app.use(express.json());
+// En Express 5 req.body queda undefined si la solicitud no trae cuerpo
+app.use((req, res, next) => {
+  req.body ??= {};
+  next();
+});
 
 app.use("/api/auth", authRouter);
 app.use("/api/categorias", categoriasRouter);

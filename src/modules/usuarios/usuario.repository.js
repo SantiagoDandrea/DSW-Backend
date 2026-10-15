@@ -4,7 +4,7 @@ const USUARIO_INCLUDE = {
   localidad: true,
 };
 
-function construirWhere({ nombre, apellido, rol, activo }) {
+function construirWhere({ nombre, apellido, rol }) {
   const where = {};
 
   if (nombre !== undefined) {

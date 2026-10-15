@@ -9,18 +9,9 @@ const SALT_ROUNDS = 10;
 
 const MENSAJE_DNI_DUPLICADO = "Ya existe un usuario con ese DNI.";
 const MENSAJE_EMAIL_DUPLICADO = "Ya existe un usuario con ese email.";
-const MENSAJE_REGISTROS_ASOCIADOS =
-  "No se puede eliminar este usuario porque tiene pedidos asociados. Reasigná o eliminá esos registros primero.";
 
 function esRegistroNoEncontrado(err) {
   return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025";
-}
-
-function esRestriccionDeEliminacion(err) {
-  return (
-    err instanceof Prisma.PrismaClientKnownRequestError &&
-    (err.code === "P2003" || err.code === "P2014")
-  );
 }
 
 function manejarErrorDuplicado(err) {
@@ -112,9 +103,6 @@ export const usuarioService = {
     } catch (err) {
       if (esRegistroNoEncontrado(err)) {
         throw new NotFoundError(mensajeNoExiste(dni));
-      }
-      if (esRestriccionDeEliminacion(err)) {
-        throw new ConflictError(MENSAJE_REGISTROS_ASOCIADOS);
       }
       throw err;
     }

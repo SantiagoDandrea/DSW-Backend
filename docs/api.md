@@ -4,6 +4,10 @@
 
 /api/
 
+## Errores
+
+Los errores se responden con el formato `{ "error": "mensaje" }`. Si el cuerpo de la solicitud no es un JSON válido, se responde 400 ("El cuerpo de la solicitud no es un JSON válido."). Si falta el cuerpo, cada endpoint responde el 400 de validación del primer campo obligatorio.
+
 ---
 
 # Auth
@@ -73,7 +77,7 @@ Devuelve los datos del usuario autenticado (mismo formato que `GET /usuarios/:dn
 Requiere el header `Authorization: Bearer <token>` con un token válido.
 
 - Sin header, con formato inválido, o con un token vencido/con firma inválida: 401.
-- Si el usuario del token ya no existe en la base (fue eliminado después de emitirse el token): 401.
+- Si el usuario del token ya no existe o fue desactivado después de emitirse el token: 401.
 
 ## PUT /auth/me
 
@@ -265,15 +269,22 @@ Body:
 
 productoId debe corresponder a un producto existente.
 
+`valor` debe ser mayor a 0, con hasta dos decimales.
+
 No puede existir más de un precio para el mismo producto con la misma fechaDesde.
 
 ### PUT /precios/:id
 
-Actualiza un precio. Requiere rol `ADMIN`.
+Actualiza el valor o la fecha de vigencia de un precio. Requiere rol `ADMIN`. Mismo body y validaciones que `POST /precios`.
+
+- El producto de un precio no se puede cambiar: si `productoId` es distinto del actual, responde 400. Para corregirlo, se elimina el precio y se carga en el producto correcto.
+- Si el precio ya rige y se lo pasa a una fecha futura, debe quedar otro precio que rija en su lugar; si no, responde 409. Así un producto nunca queda sin precio vigente.
 
 ### DELETE /precios/:id
 
 Elimina un precio. Requiere rol `ADMIN`.
+
+- Un precio que ya rige solo se puede eliminar si queda otro que rija en su lugar (el anterior pasa a ser el vigente); si es el único, responde 409. Los precios con fecha futura se pueden eliminar siempre.
 
 ### GET /productos/:id/precios
 
@@ -369,7 +380,7 @@ Registra stock.
 
 ## PUT /stock/:id (Requiere `ADMIN`)
 
-Actualiza stock.
+Actualiza stock. Si el par producto + almacén resultante ya tiene otro registro de stock, responde 409.
 
 ## DELETE /stock/:id (Requiere `ADMIN`)
 
@@ -390,6 +401,8 @@ Todos los endpoints de almacenes son administrativos y requieren autenticación 
 ## PUT /almacenes/:id (Requiere `ADMIN`)
 
 ## DELETE /almacenes/:id (Requiere `ADMIN`)
+
+Falla con 409 si el almacén tiene stock o pedidos asociados.
 
 ---
 
@@ -539,6 +552,7 @@ Crea un pedido completo.
   - La zona se indica con `envio.tipoEnvio` (`LOCAL` o `NACIONAL`). Opcionalmente se puede mandar `envio.localidad` (texto): si es "Las Parejas" se aplica la tarifa local, cualquier otra, la nacional. Si no se manda ninguno de los dos, se usa la localidad del perfil del usuario.
   - Se genera el registro de Envio (sin inventar fecha tentativa).
 - Si no requiere envío (retiro en local), no se genera Envio ni costo de flete.
+- `envio.requiereEnvio` debe ser `true` o `false` (booleano); si se omite, se toma como `false`.
 
 Body:
 
@@ -776,6 +790,7 @@ El sistema implementa control de acceso basado en roles (`RBAC`) con dos roles d
   - Valida el token JWT enviado en el header `Authorization: Bearer <token>`.
   - Si no se provee el header o el formato es incorrecto: `401 Unauthorized` ("Token no provisto.").
   - Si el token está vencido o tiene firma inválida: `401 Unauthorized` ("Token inválido o vencido.").
+  - En cada solicitud se consulta al usuario en la base: si ya no existe o fue desactivado, responde `401 Unauthorized` ("El usuario no existe o se encuentra inactivo."). El rol se toma de la base, no del token, por lo que desactivar a un usuario o cambiarle el rol tiene efecto inmediato aunque tenga un token vigente.
 - **Autorización por Rol (`requireRole`)**:
   - Verifica si el usuario autenticado posee uno de los roles permitidos para la operación.
   - Si el rol no cuenta con permisos suficientes: `403 Forbidden` ("No tienes permisos para realizar esta acción.").

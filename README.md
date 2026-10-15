@@ -34,7 +34,7 @@ Node.js + Express 5 + Prisma 7 + MySQL. Autenticación con JWT y contraseñas co
    DATABASE_URL="mysql://usuario:password@localhost:3306/nombre_db?allowPublicKeyRetrieval=true"
    JWT_SECRET="cualquier_string_random"
    ```
-   El parámetro `allowPublicKeyRetrieval=true` evita un error de conexión con MySQL 8 o superior sin SSL. Opcionalmente se puede definir `PORT` (por defecto, `3000`).
+   `JWT_SECRET` es la clave con la que se firman los tokens de sesión; es obligatoria y sin ella el servidor no arranca. El parámetro `allowPublicKeyRetrieval=true` evita un error de conexión con MySQL 8 o superior sin SSL. Opcionalmente se puede definir `PORT` (por defecto, `3000`).
 3. Aplicá las migraciones de la base de datos:
    ```
    npx prisma migrate dev

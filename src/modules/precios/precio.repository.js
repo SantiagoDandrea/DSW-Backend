@@ -65,6 +65,16 @@ export const precioRepository = {
     });
   },
 
+  contarPreciosQueRigenExcepto(productoId, idExcluido, fecha = new Date()) {
+    return prisma.precio.count({
+      where: {
+        productoId,
+        id: { not: idExcluido },
+        fechaDesde: { lte: fecha },
+      },
+    });
+  },
+
   actualizarPrecio(id, data) {
     return prisma.precio.update({
       where: { id },
