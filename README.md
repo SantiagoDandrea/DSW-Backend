@@ -39,15 +39,30 @@ Node.js + Express 5 + Prisma 7 + MySQL. Autenticación con JWT y contraseñas co
    ```
    npx prisma migrate dev
    ```
-4. Levantá el servidor:
+4. Cargá los datos de prueba iniciales (productos, categorías, precios y usuarios):
+   ```
+   pnpm seed
+   ```
+   (o `node prisma/seed.js`).
+5. Levantá el servidor:
    ```
    pnpm dev
    ```
    El servidor queda escuchando en `http://localhost:3000` y la API responde bajo `/api`.
 
 ## Usuarios
+
+La base de datos cuenta con usuarios de prueba (contraseña para todos: `Password123`):
+
+| Rol | Correo | DNI | Ubicación |
+|---|---|---|---|
+| `ADMIN` | `admin@demo.com` | `10000001` | Las Parejas |
+| `CLIENTE` | `carlos@demo.com` | `20000001` | Las Parejas |
+| `CLIENTE` | `ana@demo.com` | `20000002` | Rosario |
+| `CLIENTE` | `lucas@demo.com` | `20000003` | Caseros |
+
 - Cualquier persona puede registrarse con `POST /api/auth/register`: la cuenta siempre se crea con rol `CLIENTE`.
-- Para usar los endpoints administrativos se necesita un usuario con rol `ADMIN`, que debe existir en la base de datos. Una vez autenticado como `ADMIN`, se pueden crear otros usuarios con `POST /api/usuarios`.
+- Para usar los endpoints administrativos se necesita un usuario con rol `ADMIN`. Una vez autenticado como `ADMIN`, se pueden crear otros usuarios con `POST /api/usuarios`.
 
 ## Scripts
 
@@ -55,6 +70,7 @@ Node.js + Express 5 + Prisma 7 + MySQL. Autenticación con JWT y contraseñas co
 |---|---|
 | `pnpm dev` | Servidor de desarrollo con recarga automática (nodemon) |
 | `pnpm start` | Servidor en modo producción |
+| `pnpm seed` | Pobla o reinicia la base con datos de prueba iniciales |
 | `pnpm test` | Todos los tests (Vitest) |
 | `pnpm test:unit` | Tests unitarios |
 | `pnpm test:integration` | Test de integración HTTP; usa la base configurada en `.env` y borra los datos que crea |
