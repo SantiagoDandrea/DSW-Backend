@@ -116,7 +116,7 @@ model ImagenProducto {
   id            Int        @id @default(autoincrement())
 
   productoId    Int
-  url           String
+  url           String     @db.Text
   orden         Int?
 
   producto      Producto   @relation(fields: [productoId], references: [id], onDelete: Cascade)
